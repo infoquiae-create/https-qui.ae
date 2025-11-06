@@ -206,56 +206,72 @@ const ProductDetails = ({ product }) => {
                 src={mainImage}
                 alt={product.name}
                 fill
-                className="object-contain p-4"
+                className="object-contain lg:p-4"
                 priority
               />
               
-              {/* Mobile: Wishlist and Share Icons Overlay */}
-              <div className="lg:hidden absolute top-3 left-0 right-0 flex justify-between px-3 z-10">
+              {/* Mobile: Wishlist and Share Icons - Positioned on left side */}
+              <div className="lg:hidden absolute top-4 left-4 flex flex-col gap-2 z-10">
                 <button
                   onClick={handleWishlist}
                   disabled={wishlistLoading}
-                  className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all ${
+                  className={`w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition-all ${
                     isInWishlist 
                       ? 'bg-red-500 text-white' 
-                      : 'bg-white/90 backdrop-blur-sm text-gray-700'
+                      : 'bg-white text-gray-700 border border-gray-200'
                   }`}
                 >
-                  <HeartIcon size={20} fill={isInWishlist ? 'currentColor' : 'none'} />
+                  <HeartIcon size={20} fill={isInWishlist ? 'currentColor' : 'none'} strokeWidth={2} />
                 </button>
                 
                 <button
                   onClick={() => setShowShareMenu(!showShareMenu)}
-                  className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-gray-700"
+                  className="w-11 h-11 rounded-full bg-white border border-gray-200 shadow-lg flex items-center justify-center text-gray-700"
                 >
-                  <Share2Icon size={20} />
+                  <Share2Icon size={20} strokeWidth={2} />
                 </button>
               </div>
 
               {/* Discount Badge */}
               {discountPercent > 0 && (
-                <div className="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold shadow-lg lg:hidden">
-                  Save {discountPercent}%
+                <div className="lg:hidden absolute top-4 right-0 bg-red-500 text-white px-4 py-2 rounded-l-full text-sm font-bold shadow-lg flex items-center gap-1">
+                  <span className="text-yellow-300">🔥</span>
+                  <span>Save {discountPercent} AED</span>
                 </div>
               )}
+
+              {/* Pagination dots indicator - Mobile only */}
+              <div className="lg:hidden absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10">
+                {product.images?.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setMainImage(product.images[index])}
+                    className={`h-1.5 rounded-full transition-all ${
+                      mainImage === product.images[index] 
+                        ? 'w-6 bg-red-500' 
+                        : 'w-1.5 bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Thumbnails - Horizontal on Mobile Only */}
-            <div className="flex lg:hidden gap-2 overflow-x-auto pb-2 mt-3 scrollbar-hide">
+            <div className="flex lg:hidden gap-2 overflow-x-auto pb-2 mt-4 scrollbar-hide px-1">
               {product.images?.map((image, index) => (
                 <div
                   key={index}
                   onClick={() => setMainImage(image)}
-                  className={`flex-shrink-0 bg-white border-2 flex items-center justify-center w-16 h-16 rounded-lg cursor-pointer transition-all ${
-                    mainImage === image ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200'
+                  className={`flex-shrink-0 bg-white border-2 flex items-center justify-center w-20 h-20 rounded-lg cursor-pointer transition-all ${
+                    mainImage === image ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-200'
                   }`}
                 >
                   <Image
                     src={image}
                     alt={`${product.name} ${index}`}
-                    width={60}
-                    height={60}
-                    className="object-contain p-1"
+                    width={80}
+                    height={80}
+                    className="object-contain p-2"
                   />
                 </div>
               ))}
@@ -642,6 +658,7 @@ const ProductDetails = ({ product }) => {
         onOrderNow={handleOrderNow}
         effPrice={effPrice}
         currency={currency}
+        cartCount={cartCount}
       />
 
       <style jsx>{`
