@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 
-export const dynamic = 'force-dynamic';
 
 export default function Dashboard() {
 

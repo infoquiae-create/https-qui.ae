@@ -5,7 +5,6 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { SaveIcon, TruckIcon, PackageIcon, WeightIcon, DollarSignIcon } from 'lucide-react'
 
-export const dynamic = 'force-dynamic';
 
 export default function StoreShippingSettings() {
   const { getToken } = useAuth()

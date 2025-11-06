@@ -5,7 +5,6 @@ import axios from 'axios'
 import Loading from '@/components/Loading'
 import { toast } from 'react-hot-toast'
 
-export const dynamic = 'force-dynamic';
 
 const SECTION_OPTIONS = [
   { value: 'limited_offers', label: 'Limited Time Offers (BestSelling block)' },

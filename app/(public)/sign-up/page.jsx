@@ -3,8 +3,6 @@
 import { SignUp } from '@clerk/nextjs'
 import { useSearchParams } from 'next/navigation'
 
-export const dynamic = 'force-dynamic';
-
 export default function SignUpPage() {
   const params = useSearchParams()
   const redirect = params.get('redirect_to') || '/'

@@ -10,7 +10,6 @@ import { addToCart } from "@/lib/features/cart/cartSlice";
 import PageTitle from "@/components/PageTitle";
 import Loading from "@/components/Loading";
 
-export const dynamic = 'force-dynamic';
 
 const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 

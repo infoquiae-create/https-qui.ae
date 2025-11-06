@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { useDispatch } from "react-redux"
 
-export const dynamic = 'force-dynamic';
 
 export default function LoadingPage() {
     const router = useRouter()

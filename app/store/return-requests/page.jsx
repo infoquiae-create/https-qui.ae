@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 import Loading from '@/components/Loading';
 import { RefreshCw, Undo2, X, Image as ImageIcon, Video as VideoIcon, Clock, CheckCircle, XCircle, StarIcon } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 export default function StoreReturnRequests() {
     const { getToken } = useAuth();

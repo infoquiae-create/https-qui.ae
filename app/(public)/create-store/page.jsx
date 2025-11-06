@@ -8,7 +8,6 @@ import { useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 
-export const dynamic = 'force-dynamic';
 
 // Flag to detect if Clerk is configured; Next replaces this at build-time
 const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY

@@ -8,7 +8,6 @@ import toast from "react-hot-toast"
 import { Package, Truck, X, Download, Printer } from "lucide-react"
 import { downloadInvoice, printInvoice } from "@/lib/generateInvoice"
 
-export const dynamic = 'force-dynamic';
 
 export default function StoreOrders() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'AED'

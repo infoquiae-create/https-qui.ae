@@ -8,7 +8,6 @@ import { useAuth, useUser } from "@clerk/nextjs"
 import axios from "axios"
 import ProductForm from "../add-product/page"
 
-export const dynamic = 'force-dynamic';
 
 export default function StoreManageProducts() {
 

@@ -8,7 +8,6 @@ import { Upload, X, RefreshCw, Undo2, StarIcon } from 'lucide-react';
 import Loading from '@/components/Loading';
 import PageTitle from '@/components/PageTitle';
 
-export const dynamic = 'force-dynamic';
 
 function ReturnRequestForm() {
     const router = useRouter();

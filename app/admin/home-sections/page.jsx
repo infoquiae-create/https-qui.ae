@@ -5,7 +5,6 @@ import { PlusIcon, TrashIcon, EditIcon } from "lucide-react";
 import PageTitle from "@/components/PageTitle";
 import Link from "next/link";
 
-export const dynamic = 'force-dynamic';
 
 export default function HomeSectionsPage() {
     const [sections, setSections] = useState([]);

@@ -44,6 +44,7 @@ model GuestUser {
 model Product {
     id          String   @id @default(cuid())
     name        String
+    slug        String?  @unique
     description String
     shortDescription String?
     mrp         Float
