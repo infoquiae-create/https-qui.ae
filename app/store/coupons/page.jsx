@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { PlusIcon, EditIcon, TrashIcon, TicketIcon, XIcon, PercentIcon, DollarSignIcon, PackageIcon, UserIcon, ClockIcon, ToggleLeftIcon, ToggleRightIcon } from 'lucide-react'
 
+export const dynamic = 'force-dynamic';
+
 export default function StoreCouponsPage() {
     const [coupons, setCoupons] = useState([])
     const [products, setProducts] = useState([])

@@ -5,6 +5,8 @@ import axios from 'axios'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 
+export const dynamic = 'force-dynamic';
+
 export default function NewHomeSection(){
   const [products, setProducts] = useState([])
   const [sectionType, setSectionType] = useState('manual')

@@ -5,6 +5,8 @@ import Link from 'next/link'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
+export const dynamic = 'force-dynamic';
+
 // Reusable editor for a HomeSelection section
 function SectionEditor({ label, sectionKey, maxSlides = 3 }){
   const [loading, setLoading] = useState(true)

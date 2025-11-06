@@ -6,6 +6,8 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { useParams } from 'next/navigation'
 
+export const dynamic = 'force-dynamic';
+
 export default function EditHomeSection(){
   const { id } = useParams()
   const [products, setProducts] = useState([])

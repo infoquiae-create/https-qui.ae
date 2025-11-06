@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { PlusIcon, EditIcon, TrashIcon, FolderIcon, ImageIcon, XIcon } from 'lucide-react'
 import { IKImage, IKUpload } from 'imagekitio-next'
 
+export const dynamic = 'force-dynamic';
+
 export default function StoreCategoriesPage() {
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(true)
