@@ -189,6 +189,7 @@ const BestSelling = () => {
     <Title
   title="Fast Selling Products"
   description="Grab the best deals before they're gone!"
+  visibleButton={false}
 />
 
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5 gap-6">

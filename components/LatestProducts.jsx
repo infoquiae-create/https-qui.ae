@@ -191,6 +191,7 @@ const BestSelling = () => {
   title="Winter Sale"
   description="Grab the best deals before they're gone!"
   href="/shop"
+  visibleButton={false}
 />
 
 
