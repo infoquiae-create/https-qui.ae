@@ -2,7 +2,6 @@
 import { ChevronRightIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Banneriamge from '../assets/banner4/Mini Banner 1.webp'
 
 export default function ProductSection({ title, products, viewAllLink }) {
     const router = useRouter();
@@ -26,7 +25,7 @@ export default function ProductSection({ title, products, viewAllLink }) {
             </div>
 
             {/* Products Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {products.slice(0, 12).map((product) => (
                     <div
                         key={product.id}
@@ -49,9 +48,9 @@ export default function ProductSection({ title, products, viewAllLink }) {
                                 {product.name}
                             </h3>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-gray-900">AED{product.price}</span>
+                                <span className="text-sm font-bold text-gray-900">AED {product.price}</span>
                                 {product.mrp > product.price && (
-                                    <span className="text-xs text-gray-500 line-through">AED{product.mrp}</span>
+                                    <span className="text-xs text-gray-500 line-through">AED {product.mrp}</span>
                                 )}
                             </div>
                             {product.mrp > product.price && (

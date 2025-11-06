@@ -147,58 +147,6 @@ function SectionEditor({ label, sectionKey, maxSlides = 3 }){
       <div className='flex items-center gap-3 justify-end'>
         <button disabled={saving} className='px-4 py-2 bg-black text-white rounded-lg'>{saving ? 'Saving…' : `Save ${label}`}</button>
       </div>
-      {sectionKey === 'home_hero' && (
-        <Modal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          newSlide={newSlide}
-          setNewSlide={setNewSlide}
-          onAdd={async () => {
-            try {
-              let imageUrl = newSlide.image
-              if (newSlide.file) {
-                const fd = new FormData(); fd.append('image', newSlide.file)
-                const { data } = await axios.post('/api/admin/upload-image', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-                imageUrl = data?.url
-                if (!imageUrl) return toast.error('Upload failed')
-              }
-              const slideObj = {
-                image: imageUrl,
-                title: newSlide.title,
-                subtitle: newSlide.subtitle,
-                buttonText: newSlide.buttonText,
-                buttonLink: newSlide.buttonLink,
-                textColor: newSlide.textColor,
-                overlayColor: newSlide.overlayColor,
-                bgGradient: newSlide.bgGradient,
-                align: newSlide.align,
-              }
-              setForm(f => ({
-                ...f,
-                slidesData: [...(f.slidesData || []), slideObj].slice(0, maxSlides),
-                slides: [...(f.slides || []), imageUrl].slice(0, maxSlides)
-              }))
-              setNewSlide({
-                file: null,
-                preview: '',
-                image: '',
-                title: '',
-                subtitle: '',
-                buttonText: 'Shop Now',
-                buttonLink: '/shop',
-                textColor: '#111827',
-                overlayColor: '',
-                bgGradient: 'from-green-200 to-green-300',
-                align: 'left',
-              })
-              setModalOpen(false)
-              toast.success('Slide added')
-            } catch (e) {
-              toast.error('Failed to add slide')
-            }
-          }}
-        />
-      )}
     </form>
   )
 }
