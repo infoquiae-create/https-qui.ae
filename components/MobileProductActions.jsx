@@ -24,7 +24,7 @@ export default function MobileProductActions({
         {/* Add to Cart Button */}
         <button
           onClick={onAddToCart}
-          className="relative flex items-center justify-center w-14 h-12 bg-green-500 rounded-lg transition-all active:bg-green-600 shadow-md"
+          className="relative flex items-center justify-center w-16 h-12 bg-green-500 rounded-lg transition-all active:bg-green-600 shadow-md"
         >
           <ShoppingCart size={24} className="text-white" strokeWidth={2.5} />
           {cartCount > 0 && (
