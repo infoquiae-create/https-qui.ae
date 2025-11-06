@@ -372,12 +372,18 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                 {/* Pricing */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1">Regular Price (MRP)</label>
-                        <input type="number" step="0.01" name="mrp" value={productInfo.mrp} onChange={onChangeHandler} className="w-full border rounded px-3 py-2" placeholder="0.00" />
+                        <label className="block text-sm font-medium mb-1">Regular Price (MRP) - AED</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">AED</span>
+                            <input type="number" step="0.01" name="mrp" value={productInfo.mrp} onChange={onChangeHandler} className="w-full border rounded px-3 py-2 pl-14" placeholder="0.00" />
+                        </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium mb-1">Sale Price</label>
-                        <input type="number" step="0.01" name="price" value={productInfo.price} onChange={onChangeHandler} className="w-full border rounded px-3 py-2" placeholder="0.00" />
+                        <label className="block text-sm font-medium mb-1">Sale Price - AED</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">AED</span>
+                            <input type="number" step="0.01" name="price" value={productInfo.price} onChange={onChangeHandler} className="w-full border rounded px-3 py-2 pl-14" placeholder="0.00" />
+                        </div>
                     </div>
                 </div>
 
@@ -523,8 +529,8 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                             <div className="grid grid-cols-7 gap-2 font-medium text-sm text-gray-700">
                                 <div>Label</div>
                                 <div>Qty</div>
-                                <div>Price</div>
-                                <div>MRP</div>
+                                <div>Price (AED)</div>
+                                <div>MRP (AED)</div>
                                 <div>Stock</div>
                                 <div>Tag</div>
                                 <div></div>
@@ -538,9 +544,9 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                                             onChange={(e)=>{
                                                 const v=[...bulkOptions]; v[idx] = { ...b, qty: Number(e.target.value) }; setBulkOptions(v)
                                             }} />
-                                        <input className="border rounded px-2 py-1" type="number" step="0.01" placeholder="Price" value={b.price}
+                                        <input className="border rounded px-2 py-1" type="number" step="0.01" placeholder="AED" value={b.price}
                                             onChange={(e)=>{ const v=[...bulkOptions]; v[idx] = { ...b, price: e.target.value }; setBulkOptions(v)}} />
-                                        <input className="border rounded px-2 py-1" type="number" step="0.01" placeholder="MRP" value={b.mrp}
+                                        <input className="border rounded px-2 py-1" type="number" step="0.01" placeholder="AED" value={b.mrp}
                                             onChange={(e)=>{ const v=[...bulkOptions]; v[idx] = { ...b, mrp: e.target.value }; setBulkOptions(v)}} />
                                         <input className="border rounded px-2 py-1" type="number" placeholder="Stock" value={b.stock}
                                             onChange={(e)=>{ const v=[...bulkOptions]; v[idx] = { ...b, stock: Number(e.target.value) }; setBulkOptions(v)}} />
@@ -570,8 +576,8 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                                 <div>Color</div>
                                 <div>Image URL</div>
                                 <div>Size</div>
-                                <div>Price</div>
-                                <div>MRP</div>
+                                <div>Price (AED)</div>
+                                <div>MRP (AED)</div>
                                 <div>Stock</div>
                             </div>
                             
@@ -593,12 +599,12 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                                             onChange={(e)=>{
                                                 const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), size:e.target.value}}; setVariants(nv);
                                             }} />
-                                        <input className="border rounded px-2 py-1" placeholder="Price" type="number" step="0.01"
+                                        <input className="border rounded px-2 py-1" placeholder="AED" type="number" step="0.01"
                                             value={v.price ?? ''}
                                             onChange={(e)=>{
                                                 const nv=[...variants]; nv[idx]={...v, price:Number(e.target.value)}; setVariants(nv);
                                             }} />
-                                        <input className="border rounded px-2 py-1" placeholder="MRP" type="number" step="0.01"
+                                        <input className="border rounded px-2 py-1" placeholder="AED" type="number" step="0.01"
                                             value={v.mrp ?? ''}
                                             onChange={(e)=>{
                                                 const nv=[...variants]; nv[idx]={...v, mrp:Number(e.target.value)}; setVariants(nv);
