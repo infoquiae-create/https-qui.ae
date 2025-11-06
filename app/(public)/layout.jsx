@@ -31,13 +31,13 @@ function PublicLayoutAuthed({ children }) {
     useEffect(() => { if (user) dispatch(uploadCart({ getToken })); }, [cartItems]);
 
     return (
-        <>
+        <div className="flex flex-col min-h-screen">
             <Banner />
             <Navbar />
-            <div className="pb-20 lg:pb-0">{children}</div>
+            <main className="flex-1 pb-20 lg:pb-0">{children}</main>
             <MobileBottomNav />
             <Footer />
-        </>
+        </div>
     );
 }
 
@@ -45,13 +45,13 @@ function PublicLayoutGuest({ children }) {
     const dispatch = useDispatch();
     useEffect(() => { dispatch(fetchProducts({})); }, []);
     return (
-        <>
+        <div className="flex flex-col min-h-screen">
             <Banner />
             <NavbarGuest />
-            <div className="pb-20 lg:pb-0">{children}</div>
+            <main className="flex-1 pb-20 lg:pb-0">{children}</main>
             <MobileBottomNav />
             <Footer />
-        </>
+        </div>
     );
 }
 

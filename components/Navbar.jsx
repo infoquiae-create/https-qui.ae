@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import { useUser, useClerk, UserButton, useAuth } from "@clerk/nextjs";
 import Image from "next/image";
 import axios from "axios";
+import toast from "react-hot-toast";
 import Logo from "../assets/logo/Qui Logo G (1).png";
 import Truck from '../assets/delivery.png';
 
@@ -58,7 +59,10 @@ const Navbar = () => {
   const handleCartClick = (e) => {
     e.preventDefault();
     if (!cartCount || cartCount === 0) {
-      alert("No products in cart.");
+      toast.error("Your cart is empty. Add some products to get started!", {
+        duration: 3000,
+        icon: '🛒',
+      });
       return;
     }
     router.push("/cart");

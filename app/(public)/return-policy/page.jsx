@@ -2,8 +2,8 @@
 
 export default function ReturnPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="bg-gray-50">
+      <div className="max-w-3xl mx-auto px-4 py-10 min-h-[60vh]">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Return & Replacement Policy</h1>
         <p className="text-gray-600 mb-8">We want you to be happy with your purchase. This policy explains when and how you can request a return or a replacement on Qui.ae.</p>
 

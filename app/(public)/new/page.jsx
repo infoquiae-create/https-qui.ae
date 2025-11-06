@@ -18,8 +18,6 @@ export default function NewProductsPage() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
-            <PageTitle title="New Arrivals" />
-            
             <div className="mb-6">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">New Arrivals</h1>
                 <p className="text-gray-600">Check out our latest products just added to the store</p>

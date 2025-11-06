@@ -2,8 +2,8 @@
 
 export default function WarrantyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="bg-gray-50">
+      <div className="max-w-3xl mx-auto px-4 py-10 min-h-[60vh]">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Warranty Policy</h1>
         <p className="text-gray-600 mb-8">Coverage and support for manufacturer and seller warranties.</p>
 

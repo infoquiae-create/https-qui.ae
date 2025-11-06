@@ -2,8 +2,8 @@
 
 export default function CancellationPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="bg-gray-50">
+      <div className="max-w-3xl mx-auto px-4 py-10 min-h-[60vh]">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Cancellation Policy</h1>
         <p className="text-gray-600 mb-8">Options and timelines for cancelling an order on Qui.ae.</p>
 
