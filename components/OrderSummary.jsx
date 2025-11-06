@@ -31,7 +31,11 @@ const OrderSummary = ({ totalPrice, items }) => {
         name: '',
         email: '',
         phone: '',
-        address: ''
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: 'UAE'
     });
 
     // Shipping settings (defaults mirror prior behavior)
@@ -146,8 +150,8 @@ const OrderSummary = ({ totalPrice, items }) => {
         try {
             // Guest checkout validation
             if (!isSignedIn && isGuestCheckout) {
-                if (!guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address) {
-                    return toast.error('Please fill all guest information fields');
+                if (!guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address || !guestInfo.city || !guestInfo.state || !guestInfo.country) {
+                    return toast.error('Please fill all required fields (*)');
                 }
                 
                 const orderData = {
@@ -243,35 +247,67 @@ const OrderSummary = ({ totalPrice, items }) => {
             {!isSignedIn && isGuestCheckout && (
                 <div className='my-4 pb-4 border-b border-slate-200'>
                     <p className='text-slate-600 font-medium mb-3'>Guest Information</p>
-                    <div className='space-y-2'>
+                    <div className='space-y-2.5'>
                         <input
                             type="text"
                             placeholder="Full Name *"
                             value={guestInfo.name}
                             onChange={(e) => setGuestInfo({...guestInfo, name: e.target.value})}
-                            className='border border-slate-300 p-2 w-full rounded outline-none focus:border-orange-500'
+                            className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
                         />
                         <input
                             type="email"
-                            placeholder="Email *"
+                            placeholder="Email Address *"
                             value={guestInfo.email}
                             onChange={(e) => setGuestInfo({...guestInfo, email: e.target.value})}
-                            className='border border-slate-300 p-2 w-full rounded outline-none focus:border-orange-500'
+                            className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
                         />
                         <input
                             type="tel"
                             placeholder="Phone Number *"
                             value={guestInfo.phone}
                             onChange={(e) => setGuestInfo({...guestInfo, phone: e.target.value})}
-                            className='border border-slate-300 p-2 w-full rounded outline-none focus:border-orange-500'
+                            className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
                         />
                         <textarea
-                            placeholder="Delivery Address *"
+                            placeholder="Street Address *"
                             value={guestInfo.address}
                             onChange={(e) => setGuestInfo({...guestInfo, address: e.target.value})}
-                            rows="3"
-                            className='border border-slate-300 p-2 w-full rounded outline-none focus:border-orange-500'
+                            rows="2"
+                            className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm resize-none'
                         />
+                        <div className='grid grid-cols-2 gap-2'>
+                            <input
+                                type="text"
+                                placeholder="City *"
+                                value={guestInfo.city}
+                                onChange={(e) => setGuestInfo({...guestInfo, city: e.target.value})}
+                                className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
+                            />
+                            <input
+                                type="text"
+                                placeholder="State/Emirate *"
+                                value={guestInfo.state}
+                                onChange={(e) => setGuestInfo({...guestInfo, state: e.target.value})}
+                                className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
+                            />
+                        </div>
+                        <div className='grid grid-cols-2 gap-2'>
+                            <input
+                                type="text"
+                                placeholder="ZIP/Postal Code"
+                                value={guestInfo.zip}
+                                onChange={(e) => setGuestInfo({...guestInfo, zip: e.target.value})}
+                                className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
+                            />
+                            <input
+                                type="text"
+                                placeholder="Country *"
+                                value={guestInfo.country}
+                                onChange={(e) => setGuestInfo({...guestInfo, country: e.target.value})}
+                                className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
+                            />
+                        </div>
                     </div>
                 </div>
             )}
@@ -383,9 +419,14 @@ const OrderSummary = ({ totalPrice, items }) => {
             
             <button 
                 onClick={e => toast.promise(handlePlaceOrder(e), { loading: 'Placing Order...' })} 
-                className='w-full bg-orange-500 text-white py-3.5 rounded-lg hover:bg-orange-600 font-bold text-base transition-colors shadow-md hover:shadow-lg uppercase'
+                disabled={!isSignedIn && !isGuestCheckout}
+                className={`w-full py-3.5 rounded-lg font-bold text-base transition-colors shadow-md hover:shadow-lg uppercase ${
+                    !isSignedIn && !isGuestCheckout 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                        : 'bg-orange-500 text-white hover:bg-orange-600'
+                }`}
             >
-                Proceed to Checkout
+                {!isSignedIn && !isGuestCheckout ? 'Sign In or Use Guest Checkout' : 'Proceed to Checkout'}
             </button>
 
             {showAddressModal && <AddressModal setShowAddressModal={setShowAddressModal} />}

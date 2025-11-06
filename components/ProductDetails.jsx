@@ -181,13 +181,11 @@ const ProductDetails = ({ product }) => {
   };
 
   const handleOrderNow = () => {
-    if (!isSignedIn) {
-      router.push('/sign-in');
-      return;
-    }
+    // Add to cart for both guests and signed-in users
     for (let i = 0; i < quantity; i++) {
       dispatch(addToCart({ productId: product.id }));
     }
+    // Go directly to cart (guests can checkout there)
     router.push('/cart');
   };
 
@@ -256,7 +254,7 @@ const ProductDetails = ({ product }) => {
 
               {/* Main Image */}
               <div className="flex-1 relative">
-                <div className="relative bg-white border border-gray-200 rounded overflow-hidden h-[500px] w-full flex items-center justify-center">
+                <div className="relative bg-white border border-gray-200 rounded overflow-hidden h-[500px] w-full">
                   {/* Used Badge */}
                   {product.attributes?.condition === 'used' && (
                     <div className="absolute top-4 left-4 z-10">
@@ -269,8 +267,8 @@ const ProductDetails = ({ product }) => {
                     </div>
                   )}
 
-                  {/* Wishlist & Share - Top Right */}
-                  <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+                  {/* Wishlist - Top Right */}
+                  <div className="absolute top-4 right-4 z-10">
                     <button
                       onClick={handleWishlist}
                       disabled={wishlistLoading}
@@ -283,23 +281,15 @@ const ProductDetails = ({ product }) => {
                         strokeWidth={2} 
                       />
                     </button>
-                    <button
-                      onClick={() => setShowShareMenu(!showShareMenu)}
-                      className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-gray-300 transition"
-                    >
-                      <Share2Icon size={18} className="text-gray-600" strokeWidth={2} />
-                    </button>
                   </div>
 
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={mainImage}
-                      alt={product.name}
-                      fill
-                      className="object-contain p-8"
-                      priority
-                    />
-                  </div>
+                  <Image
+                    src={mainImage}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
                 </div>
               </div>
             </div>
@@ -319,8 +309,8 @@ const ProductDetails = ({ product }) => {
                   </div>
                 )}
 
-                {/* Wishlist & Share - Top Right */}
-                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+                {/* Wishlist - Top Right */}
+                <div className="absolute top-4 right-4 z-10">
                   <button
                     onClick={handleWishlist}
                     disabled={wishlistLoading}
@@ -333,19 +323,13 @@ const ProductDetails = ({ product }) => {
                       strokeWidth={2} 
                     />
                   </button>
-                  <button
-                    onClick={() => setShowShareMenu(!showShareMenu)}
-                    className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-gray-300 transition"
-                  >
-                    <Share2Icon size={18} className="text-gray-600" strokeWidth={2} />
-                  </button>
                 </div>
 
                 <Image
                   src={mainImage}
                   alt={product.name}
                   fill
-                  className="object-contain p-8"
+                  className="object-cover"
                   priority
                 />
               </div>
