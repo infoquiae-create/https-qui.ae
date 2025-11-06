@@ -94,59 +94,107 @@ export default function Cart() {
     }, [isSignedIn]);
 
     return (
-        <div className="min-h-screen mx-6 text-slate-800">
-            <div className="max-w-7xl mx-auto">
+        <div className="bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-[60vh]">
                 {/* Cart Section */}
                 {cartArray.length > 0 ? (
                     <>
-                        {/* Title */}
-                        <PageTitle heading="My Cart" text="items in your cart" linkText="Add more" />
+                        {/* Header */}
+                        <div className="mb-6">
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Cart ({cartArray.length})</h1>
+                        </div>
 
-                        <div className="flex items-start justify-between gap-5 max-lg:flex-col">
-                            <table className="w-full max-w-4xl text-slate-600 table-auto">
-                                <thead>
-                                    <tr className="max-sm:text-sm">
-                                        <th className="text-left">Product</th>
-                                        <th>Quantity</th>
-                                        <th>Total Price</th>
-                                        <th className="max-md:hidden">Remove</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {cartArray.map((item, index) => (
-                                        <tr key={index} className="space-x-2">
-                                            <td className="flex gap-3 my-4">
-                                                <div className="flex gap-3 items-center justify-center bg-slate-100 size-18 rounded-md">
-                                                    <Image src={item.images[0]} className="h-14 w-auto" alt="" width={45} height={45} />
+                        <div className="flex gap-6 max-lg:flex-col">
+                            {/* Cart Items */}
+                            <div className="flex-1 space-y-4">
+                                {cartArray.map((item, index) => (
+                                    <div key={index} className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="flex gap-4">
+                                            {/* Product Image */}
+                                            <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                                                <Image 
+                                                    src={item.images[0]} 
+                                                    alt={item.name}
+                                                    width={96} 
+                                                    height={96} 
+                                                    className="w-full h-full object-contain p-2"
+                                                />
+                                            </div>
+
+                                            {/* Product Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-gray-900 text-sm md:text-base line-clamp-2 mb-1">
+                                                    {item.name}
+                                                </h3>
+                                                <p className="text-xs text-gray-500 mb-2">{item.category}</p>
+                                                
+                                                <div className="flex items-center justify-between mt-3">
+                                                    {/* Price */}
+                                                    <div>
+                                                        <p className="text-lg font-bold text-orange-600">
+                                                            {currency} {item.price.toLocaleString()}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Quantity Counter */}
+                                                    <div className="flex items-center gap-3">
+                                                        <Counter productId={item.id} />
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="max-sm:text-sm">{item.name}</p>
-                                                    <p className="text-xs text-slate-500">{item.category}</p>
-                                                    <p>{currency}{item.price}</p>
+
+                                                {/* Mobile: Total & Remove */}
+                                                <div className="flex items-center justify-between mt-3 md:hidden">
+                                                    <p className="text-sm font-semibold text-gray-900">
+                                                        Total: {currency}{(item.price * item.quantity).toLocaleString()}
+                                                    </p>
+                                                    <button 
+                                                        onClick={() => handleDeleteItemFromCart(item.id)} 
+                                                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                                                    >
+                                                        REMOVE
+                                                    </button>
                                                 </div>
-                                            </td>
-                                            <td className="text-center">
-                                                <Counter productId={item.id} />
-                                            </td>
-                                            <td className="text-center">{currency}{(item.price * item.quantity).toLocaleString()}</td>
-                                            <td className="text-center max-md:hidden">
-                                                <button onClick={() => handleDeleteItemFromCart(item.id)} className=" text-red-500 hover:bg-red-50 p-2.5 rounded-full active:scale-95 transition-all">
-                                                    <Trash2Icon size={18} />
+                                            </div>
+
+                                            {/* Desktop: Total Price & Remove */}
+                                            <div className="hidden md:flex flex-col items-end justify-between">
+                                                <button 
+                                                    onClick={() => handleDeleteItemFromCart(item.id)} 
+                                                    className="text-gray-400 hover:text-red-500 transition-colors"
+                                                >
+                                                    <Trash2Icon size={20} />
                                                 </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <OrderSummary totalPrice={totalPrice} items={cartArray} />
+                                                <p className="text-lg font-bold text-gray-900">
+                                                    {currency}{(item.price * item.quantity).toLocaleString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Order Summary - Sticky on Desktop */}
+                            <div className="lg:w-[380px]">
+                                <div className="lg:sticky lg:top-6">
+                                    <OrderSummary totalPrice={totalPrice} items={cartArray} />
+                                </div>
+                            </div>
                         </div>
                     </>
                 ) : (
-                    <div className="min-h-[40vh] flex items-center justify-center text-slate-400">
-                        <div className="text-center">
-                            <PackageIcon size={64} className="mx-auto mb-4 text-slate-300" />
-                            <h1 className="text-2xl sm:text-4xl font-semibold">Your cart is empty</h1>
-                            <p className="text-slate-500 mt-2">Add some products to get started</p>
+                    <div className="min-h-[60vh] flex items-center justify-center">
+                        <div className="text-center bg-white rounded-2xl p-12 shadow-sm max-w-md">
+                            <div className="w-24 h-24 mx-auto mb-6 bg-orange-50 rounded-full flex items-center justify-center">
+                                <PackageIcon size={48} className="text-orange-400" />
+                            </div>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">Your cart is empty</h1>
+                            <p className="text-gray-500 mb-6">Add some products to get started</p>
+                            <a 
+                                href="/products" 
+                                className="inline-block bg-orange-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors"
+                            >
+                                Continue Shopping
+                            </a>
                         </div>
                     </div>
                 )}

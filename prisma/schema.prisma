@@ -213,9 +213,10 @@ model Address {
     street    String
     city      String
     state     String
-    zip       String
+    zip       String?  // Made optional as not all countries require zip codes
     country   String
     phone     String
+    phoneCode String   @default("+971") // Country phone code
     createdAt DateTime @default(now())
 
     // Relations

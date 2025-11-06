@@ -27,11 +27,6 @@ export default function Product() {
         <div className="lg:mx-6">
             <div className="max-w-7xl mx-auto pb-24 lg:pb-0">
 
-                {/* Breadcrums */}
-                <div className="text-gray-600 text-sm mt-8 mb-5 px-6 lg:px-0">
-                    Home / Products / {product?.category}
-                </div>
-
                 {/* Product Details */}
                 {product && (<ProductDetails product={product} />)}
 

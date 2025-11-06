@@ -107,8 +107,8 @@ function ProductsContent() {
         (filters.priceRange[0] > 0 || filters.priceRange[1] < 100000 ? 1 : 0)
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 py-8 min-h-[60vh]">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div>

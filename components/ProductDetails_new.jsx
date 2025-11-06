@@ -1,13 +1,13 @@
 'use client'
 
-import { StarIcon, Share2Icon, HeartIcon, MinusIcon, PlusIcon, ShoppingCartIcon } from "lucide-react";
+import { StarIcon, Share2Icon, HeartIcon } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { addToCart, uploadCart } from "@/lib/features/cart/cartSlice";
+import { addToCart } from "@/lib/features/cart/cartSlice";
 import MobileProductActions from "./MobileProductActions";
 
 const ProductDetails = ({ product }) => {
@@ -20,7 +20,6 @@ const ProductDetails = ({ product }) => {
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [showWishlistToast, setShowWishlistToast] = useState(false);
   const [wishlistMessage, setWishlistMessage] = useState('');
-  const [showCartToast, setShowCartToast] = useState(false);
   const { isSignedIn, userId } = useAuth();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -58,69 +57,42 @@ const ProductDetails = ({ product }) => {
 
   // Check wishlist status
   useEffect(() => {
-    checkWishlistStatus();
+    if (isSignedIn) {
+      checkWishlistStatus();
+    }
   }, [isSignedIn, product.id]);
 
   const checkWishlistStatus = async () => {
     try {
-      if (isSignedIn) {
-        // Check server wishlist for signed-in users
-        const { data } = await axios.get('/api/wishlist');
-        const isInList = data.wishlist?.some(item => item.productId === product.id);
-        setIsInWishlist(isInList);
-      } else {
-        // Check localStorage for guests
-        const guestWishlist = JSON.parse(localStorage.getItem('guestWishlist') || '[]');
-        const isInList = guestWishlist.includes(product.id);
-        setIsInWishlist(isInList);
-      }
+      const { data } = await axios.get('/api/wishlist');
+      const isInList = data.wishlist?.some(item => item.productId === product.id);
+      setIsInWishlist(isInList);
     } catch (error) {
       console.error('Error checking wishlist status:', error);
     }
   };
 
   const handleWishlist = async () => {
+    if (!isSignedIn) {
+      router.push('/sign-in');
+      return;
+    }
     if (wishlistLoading) return;
 
     try {
       setWishlistLoading(true);
-
-      if (isSignedIn) {
-        // Handle server wishlist for signed-in users
-        const action = isInWishlist ? 'remove' : 'add';
-        await axios.post('/api/wishlist', { 
-          productId: product.id, 
-          action 
-        });
-        
-        setIsInWishlist(!isInWishlist);
-        setWishlistMessage(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist!');
-        setShowWishlistToast(true);
-        window.dispatchEvent(new Event('wishlistUpdated'));
-        
-        setTimeout(() => setShowWishlistToast(false), 3000);
-      } else {
-        // Handle localStorage wishlist for guests
-        const guestWishlist = JSON.parse(localStorage.getItem('guestWishlist') || '[]');
-        
-        if (isInWishlist) {
-          // Remove from wishlist
-          const updatedWishlist = guestWishlist.filter(id => id !== product.id);
-          localStorage.setItem('guestWishlist', JSON.stringify(updatedWishlist));
-          setIsInWishlist(false);
-          setWishlistMessage('Removed from wishlist');
-        } else {
-          // Add to wishlist
-          guestWishlist.push(product.id);
-          localStorage.setItem('guestWishlist', JSON.stringify(guestWishlist));
-          setIsInWishlist(true);
-          setWishlistMessage('Added to wishlist!');
-        }
-        
-        setShowWishlistToast(true);
-        window.dispatchEvent(new Event('wishlistUpdated'));
-        setTimeout(() => setShowWishlistToast(false), 3000);
-      }
+      const action = isInWishlist ? 'remove' : 'add';
+      await axios.post('/api/wishlist', { 
+        productId: product.id, 
+        action 
+      });
+      
+      setIsInWishlist(!isInWishlist);
+      setWishlistMessage(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist!');
+      setShowWishlistToast(true);
+      window.dispatchEvent(new Event('wishlistUpdated'));
+      
+      setTimeout(() => setShowWishlistToast(false), 3000);
     } catch (error) {
       console.error('Error updating wishlist:', error);
       setWishlistMessage('Failed to update wishlist');
@@ -180,14 +152,10 @@ const ProductDetails = ({ product }) => {
     for (let i = 0; i < quantity; i++) {
       dispatch(addToCart({ productId: product.id }));
     }
-    
-    // Show cart toast
-    setShowCartToast(true);
-    setTimeout(() => setShowCartToast(false), 3000);
   };
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-gray-50 min-h-screen">
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -199,20 +167,19 @@ const ProductDetails = ({ product }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* LEFT: Image Gallery */}
           <div className="space-y-4">
-            {/* Desktop: Thumbnails on left + Main Image */}
-            <div className="hidden lg:flex gap-2">
-              {/* Thumbnail Gallery - Vertical with Scroll */}
-              <div className="flex flex-col gap-2 w-14 flex-shrink-0 overflow-y-auto h-[500px] scrollbar-hide cursor-grab active:cursor-grabbing">
+            {/* Thumbnail Gallery - Vertical on left */}
+            <div className="flex lg:flex-col gap-3">
+              <div className="hidden lg:flex flex-col gap-3 w-24">
                 {product.images?.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setMainImage(image)}
-                    className={`w-14 h-14 border rounded overflow-hidden transition-all bg-white flex-shrink-0 cursor-pointer ${
+                    className={`w-20 h-20 border-2 rounded-lg overflow-hidden transition-all bg-white ${
                       mainImage === image 
                         ? 'border-orange-500' 
                         : 'border-gray-200 hover:border-gray-300'
@@ -221,9 +188,9 @@ const ProductDetails = ({ product }) => {
                     <Image
                       src={image}
                       alt={`${product.name} ${index + 1}`}
-                      width={56}
-                      height={56}
-                      className="object-cover w-full h-full"
+                      width={80}
+                      height={80}
+                      className="object-contain w-full h-full p-2"
                     />
                   </button>
                 ))}
@@ -231,7 +198,7 @@ const ProductDetails = ({ product }) => {
 
               {/* Main Image */}
               <div className="flex-1 relative">
-                <div className="relative bg-white border border-gray-200 rounded overflow-hidden h-[500px] w-full flex items-center justify-center">
+                <div className="relative aspect-square bg-white border border-gray-200 rounded-lg overflow-hidden">
                   {/* Used Badge */}
                   {product.attributes?.condition === 'used' && (
                     <div className="absolute top-4 left-4 z-10">
@@ -266,73 +233,24 @@ const ProductDetails = ({ product }) => {
                     </button>
                   </div>
 
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={mainImage}
-                      alt={product.name}
-                      fill
-                      className="object-contain p-8"
-                      priority
-                    />
-                  </div>
+                  <Image
+                    src={mainImage}
+                    alt={product.name}
+                    fill
+                    className="object-contain p-8"
+                    priority
+                  />
                 </div>
-              </div>
-            </div>
-
-            {/* Mobile: Main Image Only */}
-            <div className="lg:hidden relative">
-              <div className="relative aspect-square bg-white border border-gray-200 rounded-lg overflow-hidden">
-                {/* Used Badge */}
-                {product.attributes?.condition === 'used' && (
-                  <div className="absolute top-4 left-4 z-10">
-                    <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Used
-                    </span>
-                  </div>
-                )}
-
-                {/* Wishlist & Share - Top Right */}
-                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-                  <button
-                    onClick={handleWishlist}
-                    disabled={wishlistLoading}
-                    className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-gray-300 transition"
-                  >
-                    <HeartIcon 
-                      size={18} 
-                      fill={isInWishlist ? '#ef4444' : 'none'} 
-                      className={isInWishlist ? 'text-red-500' : 'text-gray-600'}
-                      strokeWidth={2} 
-                    />
-                  </button>
-                  <button
-                    onClick={() => setShowShareMenu(!showShareMenu)}
-                    className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-gray-300 transition"
-                  >
-                    <Share2Icon size={18} className="text-gray-600" strokeWidth={2} />
-                  </button>
-                </div>
-
-                <Image
-                  src={mainImage}
-                  alt={product.name}
-                  fill
-                  className="object-contain p-8"
-                  priority
-                />
               </div>
             </div>
 
             {/* Mobile Thumbnail Gallery */}
-            <div className="lg:hidden flex gap-2 overflow-x-auto pb-2 scrollbar-hide cursor-grab active:cursor-grabbing">
+            <div className="lg:hidden flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {product.images?.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setMainImage(image)}
-                  className={`flex-shrink-0 w-14 h-14 border-2 rounded overflow-hidden transition-all bg-white cursor-pointer ${
+                  className={`flex-shrink-0 w-20 h-20 border-2 rounded-lg overflow-hidden transition-all bg-white ${
                     mainImage === image 
                       ? 'border-orange-500' 
                       : 'border-gray-200'
@@ -341,9 +259,9 @@ const ProductDetails = ({ product }) => {
                   <Image
                     src={image}
                     alt={`${product.name} ${index + 1}`}
-                    width={56}
-                    height={56}
-                    className="object-cover w-full h-full"
+                    width={80}
+                    height={80}
+                    className="object-contain w-full h-full p-2"
                   />
                 </button>
               ))}
@@ -420,11 +338,29 @@ const ProductDetails = ({ product }) => {
               )}
             </div>
 
+            {/* Installment Options */}
+            <div className="space-y-2.5 py-3 border-t border-b border-gray-200">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-700">Or divide it into 4 monthly payments of</span>
+                <span className="font-bold text-gray-900">{currency} {(effPrice / 4).toFixed(2)}</span>
+                <span className="text-gray-600">only with</span>
+                <span className="font-semibold">Tabby</span>
+                <button className="text-blue-600 text-xs underline hover:no-underline">Learn More</button>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-700">Or divide it into 4 monthly payments of</span>
+                <span className="font-bold text-gray-900">{currency} {(effPrice / 4).toFixed(2)}</span>
+                <span className="text-gray-600">only with</span>
+                <span className="font-semibold">Tamara</span>
+                <button className="text-blue-600 text-xs underline hover:no-underline">Learn More</button>
+              </div>
+            </div>
+
             {/* Bundle Options */}
             {bulkVariants.length > 0 && (
-              <div className="space-y-2 pt-2">
-                <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
-                  BUNDLE AND SAVE MORE!
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                  Bundle and Save More!
                 </p>
                 {bulkVariants
                   .slice()
@@ -441,35 +377,38 @@ const ProductDetails = ({ product }) => {
                     return (
                       <div key={`${qty}-${idx}`} className="relative">
                         {tag === 'MOST_POPULAR' && (
-                          <div className="absolute -top-2 right-2 bg-pink-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full z-10 uppercase">
+                          <div className="absolute -top-2 right-4 bg-pink-500 text-white text-[10px] font-bold px-3 py-1 rounded-full z-10">
                             MOST POPULAR
                           </div>
                         )}
                         <button
                           type="button"
                           onClick={()=> setSelectedBundleQty(qty)}
-                          className={`w-full text-left border rounded-lg p-3 flex items-center justify-between gap-3 transition-all ${
+                          className={`w-full text-left border-2 rounded-xl p-4 flex items-center justify-between gap-4 transition-all ${
                             isSelected 
                               ? 'border-orange-500 bg-orange-50' 
-                              : 'border-gray-300 bg-white hover:border-gray-400'
+                              : 'border-gray-200 bg-white hover:border-orange-300'
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                              isSelected ? 'border-orange-500' : 'border-gray-400'
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isSelected ? 'border-orange-500' : 'border-gray-300'
                             }`}>
                               {isSelected && (
-                                <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
                               )}
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900 text-sm">{label}</p>
-                              {qty === 2 && <p className="text-xs text-gray-500">Perfect for 2 Pack</p>}
+                              <p className="font-bold text-gray-900">{label}</p>
+                              {qty === 2 && <p className="text-xs text-gray-500">Perfect for you & a friend</p>}
                               {qty === 3 && <p className="text-xs text-gray-500">Best Value</p>}
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-base font-bold text-gray-900">{currency} {price.toFixed(2)}</div>
+                            <div className="text-xl font-bold text-gray-900">{currency} {price.toFixed(2)}</div>
+                            {mrp > price && (
+                              <div className="text-sm text-gray-400 line-through">{currency} {mrp.toFixed(2)}</div>
+                            )}
                           </div>
                         </button>
                       </div>
@@ -493,7 +432,7 @@ const ProductDetails = ({ product }) => {
                 <svg className="w-8 h-8 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                 </svg>
-                <span className="text-sm font-medium text-gray-800">Arrives in 2-5 days</span>
+                <span className="text-sm font-medium text-gray-800">Arrives in 2 days, November 8</span>
               </div>
 
               {/* Fast Shipping */}
@@ -514,32 +453,32 @@ const ProductDetails = ({ product }) => {
             </div>
 
             {/* Quantity */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-900">Quantity</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-9 h-9 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 transition"
+                  className="w-10 h-10 flex items-center justify-center border-2 border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition"
                 >
-                  <MinusIcon size={16} className="text-gray-700" />
+                  <MinusIcon size={18} className="text-gray-700" />
                 </button>
-                <div className="w-14 h-9 flex items-center justify-center border border-gray-300 rounded font-semibold text-base">
+                <div className="w-16 h-10 flex items-center justify-center border-2 border-gray-300 rounded-lg font-semibold text-lg">
                   {quantity}
                 </div>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-9 h-9 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 transition"
+                  className="w-10 h-10 flex items-center justify-center border-2 border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition"
                 >
-                  <PlusIcon size={16} className="text-gray-700" />
+                  <PlusIcon size={18} className="text-gray-700" />
                 </button>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2 pt-3">
+            <div className="flex gap-3">
               <button 
                 onClick={handleOrderNow}
-                className="flex-1 bg-red-500 text-white py-3.5 px-6 rounded-lg font-semibold text-base hover:bg-red-600 transition flex items-center justify-center gap-2"
+                className="flex-1 bg-red-500 text-white py-4 px-6 rounded-lg font-semibold text-base hover:bg-red-600 transition shadow-sm flex items-center justify-center gap-2"
               >
                 Order Now
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -547,12 +486,16 @@ const ProductDetails = ({ product }) => {
                 </svg>
               </button>
 
-              <button 
-                onClick={handleAddToCart}
-                className="w-12 h-12 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition flex items-center justify-center flex-shrink-0"
+              <a 
+                href={`https://wa.me/?text=${encodeURIComponent(`Hi, I'm interested in ${product.name}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-14 h-14 bg-green-500 text-white rounded-lg hover:bg-green-600 transition shadow-sm flex items-center justify-center flex-shrink-0"
               >
-                <ShoppingCartIcon size={20} />
-              </button>
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                </svg>
+              </a>
             </div>
 
             {/* Wishlist & Share */}
@@ -578,9 +521,31 @@ const ProductDetails = ({ product }) => {
             </div>
           </div>
         </div>
+
+        {/* Product Description Section */}
+        <div className="mt-8 bg-white rounded-lg p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Description</h2>
+          <div className="space-y-4">
+            {/* Categories */}
+            <div className="flex border-b border-gray-200 py-3">
+              <span className="w-32 text-gray-600 font-medium">Categories</span>
+              <span className="text-red-600 font-medium">{product.category}</span>
+            </div>
+            {/* Brands */}
+            <div className="flex border-b border-gray-200 py-3">
+              <span className="w-32 text-gray-600 font-medium">Brands</span>
+              <span className="text-red-600 font-medium">{product.store?.name || 'Generic'}</span>
+            </div>
+          </div>
+          
+          {/* Description Content */}
+          {product.description && (
+            <div className="mt-6 prose prose-sm max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: product.description }} />
+          )}
+        </div>
       </div>
 
-      {/* Wishlist Toast */}
+      {/* Toast Notification */}
       {showWishlistToast && (
         <div className="fixed bottom-8 right-8 bg-white border-2 border-orange-500 rounded-xl shadow-2xl px-6 py-4 flex items-center gap-3 z-50 animate-slide-up">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -592,32 +557,7 @@ const ProductDetails = ({ product }) => {
               fill={wishlistMessage.includes('Added') ? 'currentColor' : 'none'}
             />
           </div>
-          <div>
-            <p className="font-semibold text-gray-900">{wishlistMessage}</p>
-            {wishlistMessage.includes('Added') && (
-              <a href="/wishlist" className="text-sm text-orange-500 hover:underline">
-                View Wishlist
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Cart Toast */}
-      {showCartToast && (
-        <div className="fixed bottom-8 right-8 bg-white border-2 border-green-500 rounded-xl shadow-2xl px-6 py-4 flex items-center gap-3 z-50 animate-slide-up">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-100">
-            <ShoppingCartIcon 
-              size={20} 
-              className="text-green-600"
-            />
-          </div>
-          <div>
-            <p className="font-semibold text-gray-900">Added to cart!</p>
-            <a href="/cart" className="text-sm text-orange-500 hover:underline">
-              View Cart
-            </a>
-          </div>
+          <p className="font-semibold text-gray-900">{wishlistMessage}</p>
         </div>
       )}
 
@@ -650,23 +590,6 @@ const ProductDetails = ({ product }) => {
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
-        }
-        .scrollbar-thin::-webkit-scrollbar {
-          width: 4px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-          background: #d1d5db;
-          border-radius: 2px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
-        }
-        .scrollbar-thin {
-          scrollbar-width: thin;
-          scrollbar-color: #d1d5db transparent;
         }
       `}</style>
     </div>

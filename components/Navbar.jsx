@@ -84,7 +84,7 @@ const Navbar = () => {
               New
             </Link>
 
-            <Link href="/new" className="text-sm font-medium text-gray-700 hover:text-orange-500 transition whitespace-nowrap">
+            <Link href="/5-star-rated" className="text-sm font-medium text-gray-700 hover:text-orange-500 transition whitespace-nowrap">
               5 Star Rated
             </Link>
           
@@ -277,10 +277,11 @@ const Navbar = () => {
                 </Link>
 
                 <Link 
-                  href="/new" 
+                  href="/5-star-rated" 
                   className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-lg transition text-gray-700 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
+                  <StarIcon size={18} className="text-orange-500" fill="#FFA500" />
                   5 Star Rated
                 </Link>
 

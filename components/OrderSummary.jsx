@@ -48,6 +48,13 @@ const OrderSummary = ({ totalPrice, items }) => {
         additionalWeightFee: 2
     });
 
+    // Auto-select first address when addresses are loaded
+    useEffect(() => {
+        if (isSignedIn && addressList.length > 0 && !selectedAddress) {
+            setSelectedAddress(addressList[0]);
+        }
+    }, [addressList, isSignedIn]);
+
     useEffect(() => {
         const fetchSettings = async () => {
             try {
@@ -206,8 +213,8 @@ const OrderSummary = ({ totalPrice, items }) => {
     }
 
     return (
-        <div className='w-full max-w-lg lg:max-w-[340px] bg-slate-50/30 border border-slate-200 text-slate-500 text-sm rounded-xl p-7'>
-            <h2 className='text-xl font-medium text-slate-600'>Payment Summary</h2>
+        <div className='w-full bg-white rounded-lg shadow-sm border border-gray-200 p-5'>
+            <h2 className='text-lg font-bold text-gray-900 mb-4 uppercase'>Cart Summary</h2>
             
             {/* Guest/User Toggle */}
             {!isSignedIn && (
@@ -269,83 +276,117 @@ const OrderSummary = ({ totalPrice, items }) => {
                 </div>
             )}
 
-            <p className='text-slate-400 text-xs my-4'>Payment Method</p>
-            <div className='flex gap-2 items-center'>
-                <input type="radio" id="COD" onChange={() => setPaymentMethod('COD')} checked={paymentMethod === 'COD'} className='accent-gray-500' />
-                <label htmlFor="COD" className='cursor-pointer'>COD</label>
+            <div className='border-t border-gray-200 pt-4'>
+                <p className='text-xs font-semibold text-gray-700 uppercase mb-3'>Payment Method</p>
+                <div className='bg-gray-50 border border-gray-200 rounded-lg p-3'>
+                    <div className='flex gap-3 items-center'>
+                        <input type="radio" id="COD" onChange={() => setPaymentMethod('COD')} checked={paymentMethod === 'COD'} className='accent-orange-500 w-4 h-4' />
+                        <label htmlFor="COD" className='cursor-pointer font-medium text-gray-900'>Cash on Delivery</label>
+                    </div>
+                </div>
             </div>
-            {/* <div className='flex gap-2 items-center mt-1'>
-                <input type="radio" id="STRIPE" name='payment' onChange={() => setPaymentMethod('STRIPE')} checked={paymentMethod === 'STRIPE'} className='accent-gray-500' />
-                <label htmlFor="STRIPE" className='cursor-pointer'>Stripe Payment</label>
-            </div> */}
             
             {/* Address section - only for logged-in users */}
             {isSignedIn && (
-            <div className='my-4 py-4 border-y border-slate-200 text-slate-400'>
-                <p>Address</p>
+            <div className='my-4 pt-4 border-t border-gray-200'>
+                <p className='text-xs font-semibold text-gray-700 uppercase mb-3'>Delivery Address</p>
                 {
                     selectedAddress ? (
-                        <div className='flex gap-2 items-center'>
-                            <p>{selectedAddress.name}, {selectedAddress.city}, {selectedAddress.state}, {selectedAddress.zip}</p>
-                            <SquarePenIcon onClick={() => setSelectedAddress(null)} className='cursor-pointer' size={18} />
+                        <div className='bg-green-50 border border-green-200 rounded-lg p-3'>
+                            <div className='flex items-start justify-between gap-2'>
+                                <div className='flex-1'>
+                                    <p className='font-semibold text-gray-900 text-sm'>{selectedAddress.name}</p>
+                                    <p className='text-xs text-gray-600 mt-1'>{selectedAddress.city}, {selectedAddress.state} {selectedAddress.zip}</p>
+                                </div>
+                                <button onClick={() => setSelectedAddress(null)} className='text-orange-600 hover:text-orange-700'>
+                                    <SquarePenIcon size={16} />
+                                </button>
+                            </div>
                         </div>
                     ) : (
                         <div>
                             {
                                 addressList.length > 0 && (
-                                    <select className='border border-slate-400 p-2 w-full my-3 outline-none rounded' onChange={(e) => setSelectedAddress(addressList[e.target.value])} >
+                                    <select className='border border-gray-300 p-2.5 w-full mb-2 outline-none rounded-lg focus:border-orange-500 focus:ring-1 focus:ring-orange-500' onChange={(e) => setSelectedAddress(addressList[e.target.value])} >
                                         <option value="">Select Address</option>
                                         {
                                             addressList.map((address, index) => (
-                                                <option key={index} value={index}>{address.name}, {address.city}, {address.state}, {address.zip}</option>
+                                                <option key={index} value={index}>{address.name}, {address.city}, {address.state}</option>
                                             ))
                                         }
                                     </select>
                                 )
                             }
-                            <button className='flex items-center gap-1 text-slate-600 mt-1' onClick={() => setShowAddressModal(true)} >Add Address <PlusIcon size={18} /></button>
+                            <button className='flex items-center gap-1.5 text-orange-600 hover:text-orange-700 text-sm font-semibold' onClick={() => setShowAddressModal(true)} >
+                                <PlusIcon size={16} /> Add New Address
+                            </button>
                         </div>
                     )
                 }
             </div>
             )}
-            <div className='pb-4 border-b border-slate-200'>
-                <div className='flex justify-between'>
-                    <div className='flex flex-col gap-1 text-slate-400'>
-                        <p>Subtotal:</p>
-                        <p>Shipping:</p>
-                        {coupon && <p>Coupon ({coupon.discountType === 'percentage' ? `${coupon.discount}%` : `${currency}${coupon.discount}`}):</p>}
+            <div className='my-4 py-4 border-y border-gray-200'>
+                <div className='space-y-3'>
+                    <div className='flex justify-between text-sm'>
+                        <span className='text-gray-600'>Subtotal</span>
+                        <span className='font-semibold text-gray-900'>{currency} {totalPrice.toLocaleString()}</span>
                     </div>
-                    <div className='flex flex-col gap-1 font-medium text-right'>
-                        <p>{currency}{totalPrice.toLocaleString()}</p>
-                        <p><Protect plan={'plus'} fallback={`${currency}${shippingFee.toLocaleString()}`}>Free</Protect></p>
-                        {coupon && <p>{`-${currency}${coupon.discountType === 'percentage' ? (coupon.discount / 100 * totalPrice).toFixed(2) : Math.min(coupon.discount, totalPrice).toFixed(2)}`}</p>}
+                    <div className='flex justify-between text-sm'>
+                        <span className='text-gray-600'>Shipping</span>
+                        <span className='font-semibold'>
+                            <Protect plan={'plus'} fallback={<span className='text-gray-900'>{currency}{shippingFee.toLocaleString()}</span>}>
+                                <span className='text-green-600'>Free</span>
+                            </Protect>
+                        </span>
                     </div>
+                    {coupon && (
+                        <div className='flex justify-between text-sm'>
+                            <span className='text-gray-600'>Coupon ({coupon.discountType === 'percentage' ? `${coupon.discount}%` : `${currency}${coupon.discount}`})</span>
+                            <span className='font-semibold text-green-600'>-{currency}{coupon.discountType === 'percentage' ? (coupon.discount / 100 * totalPrice).toFixed(2) : Math.min(coupon.discount, totalPrice).toFixed(2)}</span>
+                        </div>
+                    )}
                 </div>
                 {
                     !coupon ? (
-                        <form onSubmit={e => toast.promise(handleCouponCode(e), { loading: 'Checking Coupon...' })} className='flex justify-center gap-3 mt-3'>
-                            <input onChange={(e) => setCouponCodeInput(e.target.value)} value={couponCodeInput} type="text" placeholder='Coupon Code' className='border border-slate-400 p-1.5 rounded w-full outline-none' />
-                            <button className='bg-slate-600 text-white px-3 rounded hover:bg-slate-800 active:scale-95 transition-all'>Apply</button>
+                        <form onSubmit={e => toast.promise(handleCouponCode(e), { loading: 'Checking Coupon...' })} className='flex gap-2 mt-4'>
+                            <input 
+                                onChange={(e) => setCouponCodeInput(e.target.value)} 
+                                value={couponCodeInput} 
+                                type="text" 
+                                placeholder='Enter coupon code' 
+                                className='border border-gray-300 px-3 py-2 rounded-lg w-full outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm' 
+                            />
+                            <button className='bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 font-medium text-sm transition-colors whitespace-nowrap'>Apply</button>
                         </form>
                     ) : (
-                        <div className='w-full flex items-center justify-center gap-2 text-xs mt-2'>
-                            <p>Code: <span className='font-semibold ml-1'>{coupon.code.toUpperCase()}</span></p>
-                            <p>{coupon.description}</p>
-                            <XIcon size={18} onClick={() => setCoupon('')} className='hover:text-red-700 transition cursor-pointer' />
+                        <div className='bg-green-50 border border-green-200 rounded-lg p-3 mt-4 flex items-center justify-between'>
+                            <div>
+                                <p className='text-xs text-gray-600'>Coupon Applied</p>
+                                <p className='font-semibold text-green-700'>{coupon.code.toUpperCase()}</p>
+                            </div>
+                            <button onClick={() => setCoupon('')} className='text-red-500 hover:text-red-700'>
+                                <XIcon size={18} />
+                            </button>
                         </div>
                     )
                 }
             </div>
-            <div className='flex justify-between py-4'>
-                <p>Total:</p>
-                <p className='font-medium text-right'>
+            
+            <div className='flex justify-between items-center py-4 border-t border-gray-200'>
+                <span className='text-lg font-bold text-gray-900'>Total</span>
+                <span className='text-2xl font-bold text-orange-600'>
                     <Protect plan={'plus'} fallback={`${currency}${(() => { const discount = coupon ? (coupon.discountType === 'percentage' ? (coupon.discount / 100 * totalPrice) : Math.min(coupon.discount, totalPrice)) : 0; const total = totalPrice + shippingFee - discount; return coupon ? total.toFixed(2) : total.toLocaleString(); })()}`}>
                     {currency}{(() => { const discount = coupon ? (coupon.discountType === 'percentage' ? (coupon.discount / 100 * totalPrice) : Math.min(coupon.discount, totalPrice)) : 0; const total = totalPrice - discount; return coupon ? total.toFixed(2) : total.toLocaleString(); })()}
                     </Protect>
-                </p>
+                </span>
             </div>
-            <button onClick={e => toast.promise(handlePlaceOrder(e), { loading: 'placing Order...' })} className='w-full bg-slate-700 text-white py-2.5 rounded hover:bg-slate-900 active:scale-95 transition-all'>Place Order</button>
+            
+            <button 
+                onClick={e => toast.promise(handlePlaceOrder(e), { loading: 'Placing Order...' })} 
+                className='w-full bg-orange-500 text-white py-3.5 rounded-lg hover:bg-orange-600 font-bold text-base transition-colors shadow-md hover:shadow-lg uppercase'
+            >
+                Proceed to Checkout
+            </button>
 
             {showAddressModal && <AddressModal setShowAddressModal={setShowAddressModal} />}
 

@@ -14,20 +14,21 @@ const Footer = () => {
 
     const linkSections = [
         {
-            title: "PRODUCTS",
+            title: "SHOP",
             links: [
-                { text: "Earphones", path: '/', icon: null },
-                { text: "Headphones", path: '/', icon: null },
-                { text: "Smartphones", path: '/', icon: null },
-                { text: "Laptops", path: '/', icon: null },
+                { text: "All Products", path: '/products', icon: null },
+                { text: "Top Selling", path: '/top-selling', icon: null },
+                { text: "New Arrivals", path: '/new', icon: null },
+                { text: "Categories", path: '/categories', icon: null },
             ]
         },
         {
-            title: "HELP",
+            title: "CUSTOMER CARE",
             links: [
+                { text: "My Orders", path: '/orders', icon: null },
+                { text: "My Wishlist", path: '/wishlist', icon: null },
                 { text: "FAQ", path: '/faq', icon: null },
                 { text: "Support", path: '/support', icon: null },
-                { text: "My Orders", path: '/orders', icon: null },
             ]
         },
         {
@@ -35,82 +36,112 @@ const Footer = () => {
             links: [
                 { text: "Terms & Conditions", path: '/terms', icon: null },
                 { text: "Privacy Policy", path: '/privacy-policy', icon: null },
-                { text: "Cookie Policy", path: '/cookie-policy', icon: null },
-                { text: "Shipping & Delivery Policy", path: '/shipping-policy', icon: null },
-                { text: "Return & Refund Policy", path: '/return-policy', icon: null },
-                { text: "Cancellation Policy", path: '/cancellation-policy', icon: null },
-                { text: "Warranty & Repairs", path: '/warranty-policy', icon: null },
-                { text: "Payment, Pricing & Taxes", path: '/payment-and-pricing', icon: null },
+                { text: "Shipping Policy", path: '/shipping-policy', icon: null },
+                { text: "Return Policy", path: '/return-policy', icon: null },
             ]
         },
-        // {
-        //     title: "GROW WITH QUI.AE",
-        //     links: [
-        //         { text: "Become Plus Member", path: '/pricing', icon: null },
-        //         { text: "Create Your Store", path: '/create-store', icon: null },
-        //         { text: "Home", path: '/', icon: null },
-        //     ]
-        // },
         {
-            title: "CONTACT",
+            title: "ABOUT QUI",
             links: [
-                { text:  "support@qui.ae", path: 'mailto:support@qui.ae', icon: MailIcon },
-                // { text: "support@qui.ae", path: '/', icon: PhoneIcon },
-                { text: "Dubai, UAE", path: '/', icon: MapPinIcon }
+                { text: "About Us", path: '/support', icon: null },
+                { text: "Create Your Store", path: '/create-store', icon: null },
+                { text: "Become a Seller", path: '/create-store', icon: null },
+                { text: "Careers", path: '/support', icon: null },
             ]
         }
     ];
 
     const socialIcons = [
-        { icon: FacebookIcon, link: "https://www.facebook.com" },
+        { icon: FacebookIcon, link: "https://www.facebook.com/profile.php?id=61582829276428" },
         { icon: InstagramIcon, link: "https://www.instagram.com" },
         { icon: TwitterIcon, link: "https://twitter.com" },
         { icon: LinkedinIcon, link: "https://www.linkedin.com" },
     ]
 
     return (
-        <footer className="mx-0 bg-black text-slate-200">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-slate-500/30">
-                    <div>
-                        <Link href="/" className="text-4xl font-semibold text-white">
-                                <Image
-                                          src={Logo}  // ✅ correct variable name
-                                          alt="dQui Logo"
-                                          width={180}
-                                          height={48}
-                                          className="object-contain"
-                                          priority
-                                        />
+        <footer className="bg-black text-slate-200 border-t border-slate-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Main Footer Content */}
+                <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-6">
+                    {/* Brand Section - Takes 2 columns on large screens */}
+                    <div className="lg:col-span-2">
+                        <Link href="/" className="inline-block mb-4">
+                            <Image
+                                src={Logo}
+                                alt="Qui Logo"
+                                width={160}
+                                height={40}
+                                className="object-contain"
+                                priority
+                            />
                         </Link>
-                        <p className="max-w-[410px] mt-6 text-sm text-slate-300">Welcome to Qui, your ultimate destination for the latest and smartest gadgets. From smartphones and smartwatches to essential accessories, we bring you the best in innovation — all in one place.</p>
-                        <div className="flex items-center gap-3 mt-5">
+                        <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-sm">
+                            Your ultimate destination for the latest gadgets and electronics. Quality products, fast delivery, and exceptional service.
+                        </p>
+                        
+                        {/* Contact Info */}
+                        <div className="space-y-3 mb-6">
+                            <div className="flex items-center gap-2 text-sm">
+                                <MailIcon />
+                                <a href="mailto:support@qui.ae" className="text-slate-400 hover:text-white transition">
+                                    support@qui.ae
+                                </a>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                                <MapPinIcon />
+                                <span className="text-slate-400">Dubai, UAE</span>
+                            </div>
+                        </div>
+
+                        {/* Social Icons */}
+                        <div className="flex items-center gap-3">
                             {socialIcons.map((item, i) => (
-                                <Link href={item.link} key={i} className="flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 transition rounded-full">
+                                <Link 
+                                    href={item.link} 
+                                    key={i} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="flex items-center justify-center w-9 h-9 bg-white/5 hover:bg-white/10 border border-slate-800 hover:border-slate-700 transition rounded-lg"
+                                >
                                     <item.icon />
                                 </Link>
                             ))}
                         </div>
                     </div>
-                    <div className="flex flex-wrap justify-between w-full md:w-[60%] gap-5 text-sm ">
-                        {linkSections.map((section, index) => (
-                            <div key={index}>
-                                <h3 className="font-semibold text-white md:mb-5 mb-3 tracking-wide">{section.title}</h3>
-                                <ul className="space-y-2.5">
-                                    {section.links.map((link, i) => (
-                                        <li key={i} className="flex items-center gap-2">
-                                            {link.icon && <link.icon />}
-                                            <Link href={link.path} className="text-slate-200 hover:text-white transition">{link.text}</Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
+
+                    {/* Link Sections - Each takes 1 column */}
+                    {linkSections.map((section, index) => (
+                        <div key={index}>
+                            <h3 className="text-white font-semibold text-sm mb-4 tracking-wider">{section.title}</h3>
+                            <ul className="space-y-3">
+                                {section.links.map((link, i) => (
+                                    <li key={i}>
+                                        <Link 
+                                            href={link.path} 
+                                            className="text-sm text-slate-400 hover:text-white transition inline-block"
+                                        >
+                                            {link.text}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="border-t border-slate-800 py-6">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <p className="text-sm text-slate-500">
+                            © {new Date().getFullYear()} Qui.ae. All rights reserved.
+                        </p>
+                        <div className="flex items-center gap-6 text-sm">
+                            <Link href="/terms" className="text-slate-500 hover:text-white transition">Terms</Link>
+                            <Link href="/privacy-policy" className="text-slate-500 hover:text-white transition">Privacy</Link>
+                            <Link href="/cookie-policy" className="text-slate-500 hover:text-white transition">Cookies</Link>
+                        </div>
                     </div>
                 </div>
-                <p className="py-4 text-sm text-slate-400">
-                    © {new Date().getFullYear()} Qui. All rights reserved.
-                </p>
             </div>
         </footer>
     );

@@ -189,8 +189,8 @@ function ReturnRequestForm() {
     const replacementEligible = order?.orderItems?.filter(item => item.product?.allowReplacement) || [];
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4">
-            <div className="max-w-3xl mx-auto">
+        <div className="bg-gray-50 py-8 px-4">
+            <div className="max-w-3xl mx-auto min-h-[60vh]">
                 <PageTitle 
                     heading="Return/Replacement Request" 
                     text="Return within 7 days or request a replacement within 15 days of delivery"
