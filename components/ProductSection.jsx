@@ -31,21 +31,21 @@ export default function ProductSection({ title, products, viewAllLink }) {
                     <div
                         key={product.id}
                         onClick={() => router.push(`/product/${product.id}`)}
-                        className="cursor-pointer group"
+                        className="cursor-pointer group hover:shadow-md transition-all duration-200 rounded-lg p-2 hover:bg-gray-50"
                     >
                         {/* Product Image */}
-                        <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-2">
+                        <div className="relative aspect-square bg-white rounded-lg overflow-hidden mb-2 border border-gray-100">
                             <Image
                                 src={product.images[0]}
                                 alt={product.name}
                                 fill
-                                className="object-contain p-2 group-hover:scale-105 transition-transform"
+                                className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                             />
                         </div>
 
                         {/* Product Info */}
                         <div className="space-y-1">
-                            <h3 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition">
+                            <h3 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-orange-600 transition">
                                 {product.name}
                             </h3>
                             <div className="flex items-center gap-2">
