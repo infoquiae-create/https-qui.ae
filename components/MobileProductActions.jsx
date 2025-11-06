@@ -1,20 +1,14 @@
 'use client'
 
 import { Plus, ShoppingCart } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
 export default function MobileProductActions({ 
   onOrderNow, 
+  onAddToCart,
   effPrice,
   currency,
   cartCount 
 }) {
-  const router = useRouter()
-
-  const handleCartClick = () => {
-    router.push('/cart')
-  }
-
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-2xl z-50 safe-area-bottom">
       <div className="flex items-center gap-3 px-4 py-3">
@@ -27,9 +21,9 @@ export default function MobileProductActions({
           <Plus size={20} strokeWidth={3} />
         </button>
 
-        {/* Cart Button */}
+        {/* Add to Cart Button */}
         <button
-          onClick={handleCartClick}
+          onClick={onAddToCart}
           className="relative flex items-center justify-center w-14 h-12 bg-green-500 rounded-lg transition-all active:bg-green-600 shadow-md"
         >
           <ShoppingCart size={24} className="text-white" strokeWidth={2.5} />

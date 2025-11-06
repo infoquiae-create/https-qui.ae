@@ -562,11 +562,12 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                     {/* Classic size/color variants editor */}
                     {hasVariants && !bulkEnabled && (
                         <div className="mt-3 space-y-3">
-                            <div className="text-sm text-gray-600">Add variant rows below. Each variant can have color, size, price, MRP, and stock.</div>
+                            <div className="text-sm text-gray-600">Add variant rows below. Each variant can have color, size, image, price, MRP, and stock.</div>
                             
                             {/* Column Headers */}
-                            <div className="grid grid-cols-5 gap-2 font-medium text-sm text-gray-700">
+                            <div className="grid grid-cols-6 gap-2 font-medium text-sm text-gray-700">
                                 <div>Color</div>
+                                <div>Image URL</div>
                                 <div>Size</div>
                                 <div>Price</div>
                                 <div>MRP</div>
@@ -575,11 +576,16 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                             
                             <div className="space-y-2">
                                 {variants.map((v, idx) => (
-                                    <div key={idx} className="grid grid-cols-5 gap-2">
+                                    <div key={idx} className="grid grid-cols-6 gap-2">
                                         <input className="border rounded px-2 py-1" placeholder="Color"
                                             value={v.options?.color || ''}
                                             onChange={(e)=>{
                                                 const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), color:e.target.value}}; setVariants(nv);
+                                            }} />
+                                        <input className="border rounded px-2 py-1" placeholder="Image URL"
+                                            value={v.options?.image || ''}
+                                            onChange={(e)=>{
+                                                const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), image:e.target.value}}; setVariants(nv);
                                             }} />
                                         <input className="border rounded px-2 py-1" placeholder="Size"
                                             value={v.options?.size || ''}

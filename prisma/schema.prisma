@@ -45,6 +45,7 @@ model Product {
     id          String   @id @default(cuid())
     name        String
     description String
+    shortDescription String?
     mrp         Float
     price       Float
     images      String[]
@@ -55,6 +56,9 @@ model Product {
     hasVariants Boolean  @default(false)
     variants    Json     @default("[]")
     attributes  Json     @default("{}")
+    // Bulk pricing support
+    hasBulkPricing Boolean @default(false)
+    bulkPricing    Json    @default("[]")
     fastDelivery Boolean @default(false)
     allowReturn Boolean  @default(true)
     allowReplacement Boolean @default(true)
