@@ -580,60 +580,100 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                     {/* Classic size/color variants editor */}
                     {hasVariants && !bulkEnabled && (
                         <div className="mt-3 space-y-3">
-                            <div className="text-sm text-gray-600">Add variant rows below. Each variant can have color, size, image, price, MRP, and stock.</div>
+                            <div className="text-sm text-gray-600 mb-3">Add variant rows below. Each variant can have a custom title, color, size, image, SKU, price, MRP, and stock.</div>
                             
-                            {/* Column Headers */}
-                            <div className="grid grid-cols-6 gap-2 font-medium text-sm text-gray-700">
-                                <div>Color</div>
-                                <div>Image URL</div>
-                                <div>Size</div>
-                                <div>Price (AED)</div>
-                                <div>MRP (AED)</div>
-                                <div>Stock</div>
-                            </div>
-                            
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {variants.map((v, idx) => (
-                                    <div key={idx} className="grid grid-cols-6 gap-2">
-                                        <input className="border rounded px-2 py-1" placeholder="Color"
-                                            value={v.options?.color || ''}
-                                            onChange={(e)=>{
-                                                const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), color:e.target.value}}; setVariants(nv);
-                                            }} />
-                                        <input className="border rounded px-2 py-1" placeholder="Image URL"
-                                            value={v.options?.image || ''}
-                                            onChange={(e)=>{
-                                                const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), image:e.target.value}}; setVariants(nv);
-                                            }} />
-                                        <input className="border rounded px-2 py-1" placeholder="Size"
-                                            value={v.options?.size || ''}
-                                            onChange={(e)=>{
-                                                const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), size:e.target.value}}; setVariants(nv);
-                                            }} />
-                                        <input className="border rounded px-2 py-1" placeholder="AED" type="number" step="0.01"
-                                            value={v.price ?? ''}
-                                            onChange={(e)=>{
-                                                const nv=[...variants]; nv[idx]={...v, price:Number(e.target.value)}; setVariants(nv);
-                                            }} />
-                                        <input className="border rounded px-2 py-1" placeholder="AED" type="number" step="0.01"
-                                            value={v.mrp ?? ''}
-                                            onChange={(e)=>{
-                                                const nv=[...variants]; nv[idx]={...v, mrp:Number(e.target.value)}; setVariants(nv);
-                                            }} />
-                                        <div className="flex items-center gap-2">
-                                            <input className="border rounded px-2 py-1 w-full" placeholder="Stock" type="number"
-                                                value={v.stock ?? 0}
-                                                onChange={(e)=>{
-                                                    const nv=[...variants]; nv[idx]={...v, stock:Number(e.target.value)}; setVariants(nv);
-                                                }} />
-                                            <button type="button" className="text-red-600 text-sm whitespace-nowrap" onClick={()=>{
+                                    <div key={idx} className="border rounded-lg p-4 bg-gray-50 space-y-3">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h4 className="font-medium text-gray-700">Variant #{idx + 1}</h4>
+                                            <button type="button" className="text-red-600 text-sm font-medium hover:text-red-700" onClick={()=>{
                                                 setVariants(variants.filter((_,i)=>i!==idx))
-                                            }}>✕</button>
+                                            }}>✕ Remove</button>
+                                        </div>
+                                        
+                                        {/* Variant Title */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Variant Title (Optional)</label>
+                                                <input className="w-full border rounded px-3 py-2" placeholder="e.g., Black - Large"
+                                                    value={v.options?.title || ''}
+                                                    onChange={(e)=>{
+                                                        const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), title:e.target.value}}; setVariants(nv);
+                                                    }} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">SKU (Optional)</label>
+                                                <input className="w-full border rounded px-3 py-2" placeholder="Variant SKU"
+                                                    value={v.sku || ''}
+                                                    onChange={(e)=>{
+                                                        const nv=[...variants]; nv[idx]={...v, sku:e.target.value}; setVariants(nv);
+                                                    }} />
+                                            </div>
+                                        </div>
+
+                                        {/* Color, Size, Image */}
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Color</label>
+                                                <input className="w-full border rounded px-3 py-2" placeholder="e.g., Black, White"
+                                                    value={v.options?.color || ''}
+                                                    onChange={(e)=>{
+                                                        const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), color:e.target.value}}; setVariants(nv);
+                                                    }} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Size</label>
+                                                <input className="w-full border rounded px-3 py-2" placeholder="e.g., S, M, L"
+                                                    value={v.options?.size || ''}
+                                                    onChange={(e)=>{
+                                                        const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), size:e.target.value}}; setVariants(nv);
+                                                    }} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Stock</label>
+                                                <input className="w-full border rounded px-3 py-2" placeholder="Qty" type="number"
+                                                    value={v.stock ?? 0}
+                                                    onChange={(e)=>{
+                                                        const nv=[...variants]; nv[idx]={...v, stock:Number(e.target.value)}; setVariants(nv);
+                                                    }} />
+                                            </div>
+                                        </div>
+
+                                        {/* Image URL */}
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">Image URL (Optional)</label>
+                                            <input className="w-full border rounded px-3 py-2" placeholder="https://example.com/image.jpg"
+                                                value={v.options?.image || ''}
+                                                onChange={(e)=>{
+                                                    const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), image:e.target.value}}; setVariants(nv);
+                                                }} />
+                                        </div>
+
+                                        {/* Pricing */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Price (AED)</label>
+                                                <input className="w-full border rounded px-3 py-2" placeholder="0.00" type="number" step="0.01"
+                                                    value={v.price ?? ''}
+                                                    onChange={(e)=>{
+                                                        const nv=[...variants]; nv[idx]={...v, price:Number(e.target.value)}; setVariants(nv);
+                                                    }} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">MRP (AED)</label>
+                                                <input className="w-full border rounded px-3 py-2" placeholder="0.00" type="number" step="0.01"
+                                                    value={v.mrp ?? ''}
+                                                    onChange={(e)=>{
+                                                        const nv=[...variants]; nv[idx]={...v, mrp:Number(e.target.value)}; setVariants(nv);
+                                                    }} />
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                            <button type="button" className="text-green-600 text-sm font-medium" onClick={()=> setVariants([...variants, { options:{}, price:0, mrp:0, stock:0 }])}>+ Add Variant</button>
+                            
+                            <button type="button" className="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium" onClick={()=> setVariants([...variants, { options:{}, price:0, mrp:0, stock:0, sku:'' }])}>+ Add Variant</button>
                         </div>
                     )}
                 </div>
