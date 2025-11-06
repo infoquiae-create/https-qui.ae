@@ -260,6 +260,12 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                         stock: Number(b.stock || 0),
                     }))
                 hasVariantsFlag = variantsToSend.length > 0
+                
+                // Ensure base price/mrp are set from the first bulk option for API validation
+                if (variantsToSend.length > 0 && (!productInfo.price || !productInfo.mrp)) {
+                    formData.set('price', String(variantsToSend[0].price))
+                    formData.set('mrp', String(variantsToSend[0].mrp))
+                }
             }
             formData.append('hasVariants', String(hasVariantsFlag))
             if (hasVariantsFlag) {
@@ -283,6 +289,11 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
             productInfo.reviews.forEach((rev, index) => {
                 if (rev.image) formData.append(`reviewImages_${index}`, rev.image)
             })
+
+            // Add productId for edit mode
+            if (product?.id) {
+                formData.append('productId', product.id)
+            }
 
             const token = await getToken()
             const apiCall = product

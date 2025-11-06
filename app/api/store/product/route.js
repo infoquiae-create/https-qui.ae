@@ -89,14 +89,22 @@ export async function POST(request) {
 
         // Parse attributes optionally
         let attributes = {}
+        let shortDescription = null
         if (attributesRaw) {
-            try { attributes = JSON.parse(attributesRaw) || {} } catch { attributes = {} }
+            try { 
+                attributes = JSON.parse(attributesRaw) || {}
+                // Extract shortDescription from attributes
+                if (attributes.shortDescription) {
+                    shortDescription = attributes.shortDescription
+                }
+            } catch { attributes = {} }
         }
 
         const product = await prisma.product.create({
             data: {
                 name,
                 description,
+                shortDescription,
                 mrp: finalMrp,
                 price: finalPrice,
                 category,
@@ -187,8 +195,15 @@ export async function PUT(request) {
             if (mrp !== undefined) finalMrp = mrp
         }
 
+        let shortDescription = product.shortDescription
         if (attributesRaw) {
-            try { attributes = JSON.parse(attributesRaw) || attributes } catch {}
+            try { 
+                attributes = JSON.parse(attributesRaw) || attributes
+                // Extract shortDescription from attributes
+                if (attributes.shortDescription !== undefined) {
+                    shortDescription = attributes.shortDescription
+                }
+            } catch {}
         }
 
         product = await prisma.product.update({
@@ -196,6 +211,7 @@ export async function PUT(request) {
             data: {
                 name,
                 description,
+                shortDescription,
                 mrp: finalMrp,
                 price: finalPrice,
                 category,
