@@ -19,14 +19,13 @@ export default function MobileBottomNav() {
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/categories', icon: LayoutGrid, label: 'Categories' },
-    { href: '/shop', icon: Search, label: 'Search' },
     { href: '/cart', icon: ShoppingCart, label: 'Cart', badge: cartCount },
-    { href: isSignedIn ? '/orders' : '/sign-in', icon: User, label: 'Account' },
+    { href: isSignedIn ? '/orders' : '/sign-in', icon: User, label: isSignedIn ? 'My Account' : 'Account' },
   ]
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-      <div className="flex items-center justify-around px-2 py-2">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 safe-area-bottom">
+      <div className="flex items-stretch justify-around">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -35,21 +34,21 @@ export default function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-colors relative ${
+              className={`flex-1 flex flex-col items-center justify-center py-2.5 transition-colors relative ${
                 isActive 
-                  ? 'text-orange-500' 
-                  : 'text-gray-600 active:bg-gray-100'
+                  ? 'text-gray-900' 
+                  : 'text-gray-500'
               }`}
             >
-              <div className="relative">
-                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+              <div className="relative mb-1">
+                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
                 {item.badge > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {item.badge > 9 ? '9+' : item.badge}
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                    {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </div>
-              <span className={`text-xs mt-1 ${isActive ? 'font-semibold' : 'font-medium'}`}>
+              <span className={`text-[11px] leading-tight ${isActive ? 'font-medium' : 'font-normal'}`}>
                 {item.label}
               </span>
             </Link>
