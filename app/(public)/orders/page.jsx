@@ -8,6 +8,8 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/Loading";
 
+export const dynamic = 'force-dynamic';
+
 export default function Orders() {
 
     const {getToken} = useAuth()

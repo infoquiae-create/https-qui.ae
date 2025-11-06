@@ -7,6 +7,8 @@ import { useAuth, useUser } from "@clerk/nextjs"
 import axios from "axios"
 import { StarIcon } from "lucide-react"
 
+export const dynamic = 'force-dynamic';
+
 export default function StoreReviews() {
     const { getToken } = useAuth()
     const { user } = useUser()

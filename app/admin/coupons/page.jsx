@@ -7,6 +7,8 @@ import { couponDummyData } from "@/assets/assets"
 import { useAuth } from "@clerk/nextjs"
 import axios from "axios"
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminCoupons() {
 
     const { getToken } = useAuth()

@@ -7,6 +7,8 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 
+export const dynamic = 'force-dynamic';
+
 export default function CustomersPage() {
     const { getToken } = useAuth()
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'AED'
