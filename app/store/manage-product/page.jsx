@@ -106,7 +106,9 @@ export default function StoreManageProducts() {
                                 </div>
                             </td>
                             <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">{product.sku || '-'}</td>
-                            <td className="px-4 py-3 max-w-md text-slate-600 hidden md:table-cell truncate">{product.description}</td>
+                            <td className="px-4 py-3 max-w-md text-slate-600 hidden md:table-cell truncate">
+                                {product.description?.replace(/<[^>]*>/g, ' ').trim().substring(0, 100)}...
+                            </td>
                             <td className="px-4 py-3 hidden md:table-cell">{currency} {product.mrp.toLocaleString()}</td>
                             <td className="px-4 py-3">{currency} {product.price.toLocaleString()}</td>
                             <td className="px-4 py-3">
