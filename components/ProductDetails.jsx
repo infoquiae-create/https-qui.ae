@@ -468,49 +468,40 @@ const ProductDetails = ({ product }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
-{/* Action Buttons */}
-<div className="flex gap-3 mb-4">
-  {/* WhatsApp Style Add to Cart Button */}
+        {/* Action Buttons - Desktop Only */}
+        <div className="hidden lg:flex gap-3 mb-4">
+          {/* Buy Now Button */}
+          <button 
+            onClick={handleOrderNow}
+            className="flex-[4] bg-red-500 text-white py-4 rounded-lg font-semibold text-lg hover:bg-red-600 transition shadow-sm flex items-center justify-center gap-2"
+          >
+            Buy Now
+            <span className="text-xl">→</span>
+          </button>
 
-  {/* Buy Now Button */}
-  <button 
-    onClick={handleOrderNow}
-    className="flex-[4] bg-red-500 text-white py-4 rounded-lg font-semibold text-lg hover:bg-red-600 transition shadow-sm flex items-center justify-center gap-2"
-  >
-    Buy Now
-    <span className="text-xl">→</span>
-  </button>
+          {/* Add to Cart Button */}
+          <button 
+            onClick={() => {
+              if (!isSignedIn) {
+                router.push('/sign-in');
+                return;
+              }
+              // Add product to cart based on quantity
+              for (let i = 0; i < quantity; i++) {
+                dispatch(addToCart({ productId: product.id }));
+              }
+              setWishlistMessage('Added to cart!');
+              setShowWishlistToast(true);
+              setTimeout(() => setShowWishlistToast(false), 3000);
+            }}
+            className="flex-1 bg-green-500 text-white py-4 rounded-lg font-semibold text-lg hover:bg-green-600 transition shadow-sm flex items-center justify-center gap-2"
+          >
+            Add to Cart
+          </button>
+        </div>
 
-
-
-
-  <button 
-    onClick={() => {
-      if (!isSignedIn) {
-        router.push('/sign-in');
-        return;
-      }
-      // Add product to cart based on quantity
-      for (let i = 0; i < quantity; i++) {
-        dispatch(addToCart({ productId: product.id }));
-      }
-      setWishlistMessage('Added to cart!');
-      setShowWishlistToast(true);
-      setTimeout(() => setShowWishlistToast(false), 3000);
-    }}
-    className="flex-1 bg-green-500 text-white py-4 rounded-lg font-semibold text-lg hover:bg-green-600 transition shadow-sm flex items-center justify-center gap-2"
-  >
-  
-    Add to Cart
-  </button>
-
-
-</div>
-
-
-        {/* Additional Actions */}
-        <div className="flex gap-4 text-sm">
+        {/* Additional Actions - Desktop Only */}
+        <div className="hidden lg:flex gap-4 text-sm">
           <button 
             onClick={handleWishlist}
             disabled={wishlistLoading}
@@ -649,13 +640,8 @@ const ProductDetails = ({ product }) => {
       {/* Mobile Fixed Actions Bar */}
       <MobileProductActions
         onOrderNow={handleOrderNow}
-        onAddToCart={handleAddToCart}
-        onWishlist={handleWishlist}
-        onShare={() => setShowShareMenu(!showShareMenu)}
-        isInWishlist={isInWishlist}
         effPrice={effPrice}
         currency={currency}
-        cartCount={cartCount}
       />
 
       <style jsx>{`
