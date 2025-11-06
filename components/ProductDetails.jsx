@@ -6,9 +6,10 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/lib/features/cart/cartSlice";
 import Counter from "./Counter";
+import MobileProductActions from "./MobileProductActions";
 
 const ProductDetails = ({ product }) => {
   const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'AED ';
@@ -23,6 +24,7 @@ const ProductDetails = ({ product }) => {
   const { isSignedIn, userId } = useAuth();
   const router = useRouter();
   const dispatch = useDispatch();
+  const cartCount = useSelector((state) => state.cart.total);
 
   const averageRating = product.rating?.length
     ? product.rating.reduce((acc, item) => acc + item.rating, 0) / product.rating.length
@@ -157,6 +159,19 @@ const ProductDetails = ({ product }) => {
     router.push('/cart');
   };
 
+  // Handle Add to Cart (without redirect)
+  const handleAddToCart = () => {
+    if (!isSignedIn) {
+      router.push('/sign-in');
+      return;
+    }
+
+    // Add product to cart multiple times based on quantity
+    for (let i = 0; i < quantity; i++) {
+      dispatch(addToCart({ productId: product.id }));
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row gap-8">
       {/* Left Section: Images */}
@@ -186,25 +201,53 @@ const ProductDetails = ({ product }) => {
           {/* Main Image Container */}
           <div className="flex-1">
             {/* Main Image */}
-            <div className="relative w-full aspect-square bg-white border border-gray-200 overflow-hidden rounded-lg group cursor-zoom-in">
+            <div className="relative w-full aspect-square bg-white border border-gray-200 overflow-hidden rounded-lg group">
               <Image
                 src={mainImage}
                 alt={product.name}
                 fill
-                className="object-contain"
+                className="object-contain p-4"
+                priority
               />
-              {/* Zoom Icon Overlay */}
-            
+              
+              {/* Mobile: Wishlist and Share Icons Overlay */}
+              <div className="lg:hidden absolute top-3 left-0 right-0 flex justify-between px-3 z-10">
+                <button
+                  onClick={handleWishlist}
+                  disabled={wishlistLoading}
+                  className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all ${
+                    isInWishlist 
+                      ? 'bg-red-500 text-white' 
+                      : 'bg-white/90 backdrop-blur-sm text-gray-700'
+                  }`}
+                >
+                  <HeartIcon size={20} fill={isInWishlist ? 'currentColor' : 'none'} />
+                </button>
+                
+                <button
+                  onClick={() => setShowShareMenu(!showShareMenu)}
+                  className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-gray-700"
+                >
+                  <Share2Icon size={20} />
+                </button>
+              </div>
+
+              {/* Discount Badge */}
+              {discountPercent > 0 && (
+                <div className="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold shadow-lg lg:hidden">
+                  Save {discountPercent}%
+                </div>
+              )}
             </div>
 
             {/* Thumbnails - Horizontal on Mobile Only */}
-            <div className="flex lg:hidden gap-2 overflow-x-auto pb-2 mt-3">
+            <div className="flex lg:hidden gap-2 overflow-x-auto pb-2 mt-3 scrollbar-hide">
               {product.images?.map((image, index) => (
                 <div
                   key={index}
                   onClick={() => setMainImage(image)}
                   className={`flex-shrink-0 bg-white border-2 flex items-center justify-center w-16 h-16 rounded-lg cursor-pointer transition-all ${
-                    mainImage === image ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200 hover:border-gray-300'
+                    mainImage === image ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200'
                   }`}
                 >
                   <Image
@@ -212,7 +255,7 @@ const ProductDetails = ({ product }) => {
                     alt={`${product.name} ${index}`}
                     width={60}
                     height={60}
-                    className="object-contain"
+                    className="object-contain p-1"
                   />
                 </div>
               ))}
@@ -602,6 +645,18 @@ const ProductDetails = ({ product }) => {
           </div>
         </div>
       )}
+
+      {/* Mobile Fixed Actions Bar */}
+      <MobileProductActions
+        onOrderNow={handleOrderNow}
+        onAddToCart={handleAddToCart}
+        onWishlist={handleWishlist}
+        onShare={() => setShowShareMenu(!showShareMenu)}
+        isInWishlist={isInWishlist}
+        effPrice={effPrice}
+        currency={currency}
+        cartCount={cartCount}
+      />
 
       <style jsx>{`
         @keyframes slide-up {

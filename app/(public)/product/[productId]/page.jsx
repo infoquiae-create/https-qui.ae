@@ -25,7 +25,7 @@ export default function Product() {
 
     return (
         <div className="mx-6">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto pb-24 lg:pb-0">
 
                 {/* Breadcrums */}
                 <div className="  text-gray-600 text-sm mt-8 mb-5">

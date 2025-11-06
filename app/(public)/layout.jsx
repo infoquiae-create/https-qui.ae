@@ -3,6 +3,7 @@ import Banner from "@/components/Banner";
 import Navbar from "@/components/Navbar";
 import NavbarGuest from "@/components/NavbarGuest";
 import Footer from "@/components/Footer";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "@/lib/features/product/productSlice";
@@ -33,7 +34,8 @@ function PublicLayoutAuthed({ children }) {
         <>
             <Banner />
             <Navbar />
-            {children}
+            <div className="pb-20 lg:pb-0">{children}</div>
+            <MobileBottomNav />
             <Footer />
         </>
     );
@@ -46,7 +48,8 @@ function PublicLayoutGuest({ children }) {
         <>
             <Banner />
             <NavbarGuest />
-            {children}
+            <div className="pb-20 lg:pb-0">{children}</div>
+            <MobileBottomNav />
             <Footer />
         </>
     );
