@@ -42,7 +42,8 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
         fastDelivery: false,
         allowReturn: true,
         allowReplacement: true,
-        reviews: []
+        reviews: [],
+        badges: [] // Array of badge labels like "Price Lower Than Usual", "Hot Deal", etc.
     })
     // Variants state
     const [hasVariants, setHasVariants] = useState(false)
@@ -129,7 +130,8 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                 fastDelivery: product.fastDelivery || false,
                 allowReturn: product.allowReturn !== undefined ? product.allowReturn : true,
                 allowReplacement: product.allowReplacement !== undefined ? product.allowReplacement : true,
-                reviews: product.reviews || []
+                reviews: product.reviews || [],
+                badges: product.attributes?.badges || []
             })
             const pv = Array.isArray(product.variants) ? product.variants : []
             setHasVariants(Boolean(product.hasVariants))
@@ -242,6 +244,7 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
             const attributes = {
                 brand: productInfo.brand,
                 shortDescription: productInfo.shortDescription,
+                badges: productInfo.badges || [],
                 ...(bulkEnabled ? { variantType: 'bulk_bundles' } : {})
             }
             formData.append('attributes', JSON.stringify(attributes))
@@ -403,6 +406,35 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                     <label className="block text-sm font-medium mb-1">Short Description</label>
                     <input name="shortDescription" value={productInfo.shortDescription} onChange={onChangeHandler} className="w-full border rounded px-3 py-2" placeholder="One-liner overview" />
                 </div>
+
+                {/* Product Badges */}
+                <div>
+                    <label className="block text-sm font-medium mb-2">Product Badges (Optional)</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                        {['Price Lower Than Usual', 'Hot Deal', 'Best Seller', 'New Arrival', 'Limited Stock', 'Free Shipping'].map((badge) => (
+                            <button
+                                key={badge}
+                                type="button"
+                                onClick={() => {
+                                    if (productInfo.badges.includes(badge)) {
+                                        setProductInfo(prev => ({ ...prev, badges: prev.badges.filter(b => b !== badge) }))
+                                    } else {
+                                        setProductInfo(prev => ({ ...prev, badges: [...prev.badges, badge] }))
+                                    }
+                                }}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                    productInfo.badges.includes(badge)
+                                        ? 'bg-teal-500 text-white'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                            >
+                                {productInfo.badges.includes(badge) ? '✓ ' : ''}{badge}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="text-xs text-gray-500">Select badges to display on the product page</p>
+                </div>
+
                 <div>
                     <label className="block text-sm font-medium mb-1">Description (Rich Text)</label>
                     

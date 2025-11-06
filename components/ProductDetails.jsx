@@ -290,9 +290,23 @@ const ProductDetails = ({ product }) => {
         {/* Product Name */}
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
 
+        {/* Product Badges */}
+        {product.attributes?.badges && product.attributes.badges.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {product.attributes.badges.map((badge, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700 border border-teal-200"
+              >
+                {badge}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Short Description */}
         {product.shortDescription && (
-          <p className="text-gray-600 text-sm mb-3">{product.shortDescription}</p>
+          <p className="text-gray-600 text-sm mb-3 leading-relaxed">{product.shortDescription}</p>
         )}
 
         {/* Ratings & Reviews */}
@@ -459,11 +473,9 @@ const ProductDetails = ({ product }) => {
                         {variantPrice && (
                           <p className="text-xs text-green-600 font-semibold">{currency} {variantPrice}</p>
                         )}
-                        {inStock ? (
-                          <p className="text-[10px] text-green-600">In Stock</p>
-                        ) : (
-                          <p className="text-[10px] text-red-600">Out of Stock</p>
-                        )}
+                        <p className={`text-[10px] font-medium ${inStock ? 'text-green-600' : 'text-red-600'}`}>
+                          {inStock ? 'In Stock' : 'Out of Stock'}
+                        </p>
                       </div>
                     </button>
                   );
