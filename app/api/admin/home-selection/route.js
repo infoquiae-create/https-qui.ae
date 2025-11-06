@@ -1,0 +1,59 @@
+import prisma from "@/lib/prisma";
+import authAdmin from "@/middlewares/authAdmin";
+import { getAuth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+
+export async function GET(request) {
+  try {
+    const { userId } = getAuth(request);
+    const isAdmin = await authAdmin(userId);
+    if (!isAdmin) return NextResponse.json({ error: "not authorized" }, { status: 401 });
+
+    const selections = await prisma.homeSelection.findMany({ orderBy: { updatedAt: "desc" } });
+    return NextResponse.json({ selections });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: error.code || error.message }, { status: 400 });
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const { userId } = getAuth(request);
+    const isAdmin = await authAdmin(userId);
+    if (!isAdmin) return NextResponse.json({ error: "not authorized" }, { status: 401 });
+
+    const body = await request.json();
+    const { section, category = null, tag = null, productIds } = body || {};
+
+    if (!section || !Array.isArray(productIds)) {
+      return NextResponse.json({ error: "section and productIds are required" }, { status: 400 });
+    }
+
+    // If an entry exists for the same section+category+tag, update it; otherwise create
+    const existing = await prisma.homeSelection.findFirst({
+      where: {
+        section,
+        category,
+        tag,
+      },
+    });
+
+    let saved;
+    if (existing) {
+      saved = await prisma.homeSelection.update({
+        where: { id: existing.id },
+        data: { productIds },
+      });
+    } else {
+      saved = await prisma.homeSelection.create({
+        data: { section, category, tag, productIds },
+      });
+    }
+
+    return NextResponse.json({ message: "Saved", selection: saved });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: error.code || error.message }, { status: 400 });
+  }
+}

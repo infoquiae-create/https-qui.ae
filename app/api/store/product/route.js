@@ -1,0 +1,239 @@
+import imagekit from "@/configs/imageKit"
+import prisma from "@/lib/prisma"
+import authSeller from "@/middlewares/authSeller"
+import { getAuth } from "@clerk/nextjs/server"
+import { NextResponse } from "next/server"
+
+// Helper: Upload images to ImageKit
+const uploadImages = async (images) => {
+    return Promise.all(
+        images.map(async (image) => {
+            const buffer = Buffer.from(await image.arrayBuffer())
+            const response = await imagekit.upload({
+                file: buffer,
+                fileName: image.name,
+                folder: "products"
+            })
+            return imagekit.url({
+                path: response.filePath,
+                transformation: [
+                    { quality: "auto" },
+                    { format: "webp" },
+                    { width: "1024" }
+                ]
+            })
+        })
+    )
+}
+
+// POST: Create a new product
+export async function POST(request) {
+    try {
+        const { userId } = getAuth(request)
+        const storeId = await authSeller(userId)
+        if (!storeId) return NextResponse.json({ error: "Not authorized" }, { status: 401 })
+
+        const formData = await request.formData()
+    const name = formData.get("name")
+    const description = formData.get("description")
+    const category = formData.get("category")
+    const sku = formData.get("sku") || null
+    const images = formData.getAll("images")
+    // New: variants support
+    const hasVariants = String(formData.get("hasVariants") || "false").toLowerCase() === "true"
+    const variantsRaw = formData.get("variants") // expected JSON string if hasVariants
+    const attributesRaw = formData.get("attributes") // optional JSON of attribute definitions
+    // Fast delivery toggle
+    const fastDelivery = String(formData.get("fastDelivery") || "false").toLowerCase() === "true"
+
+    // Base pricing (used when no variants)
+    const mrp = Number(formData.get("mrp"))
+    const price = Number(formData.get("price"))
+
+        // Validate core fields
+        if (!name || !description || !category || images.length < 1) {
+            return NextResponse.json({ error: "Missing product details" }, { status: 400 })
+        }
+
+        let variants = []
+        let finalPrice = price
+        let finalMrp = mrp
+        let inStock = true
+
+        if (hasVariants) {
+            try {
+                variants = JSON.parse(variantsRaw || "[]")
+                if (!Array.isArray(variants) || variants.length === 0) {
+                    return NextResponse.json({ error: "Variants must be a non-empty array when hasVariants is true" }, { status: 400 })
+                }
+            } catch (e) {
+                return NextResponse.json({ error: "Invalid variants JSON" }, { status: 400 })
+            }
+
+            // Compute derived fields from variants
+            const prices = variants.map(v => Number(v.price)).filter(n => Number.isFinite(n))
+            const mrps = variants.map(v => Number(v.mrp ?? v.price)).filter(n => Number.isFinite(n))
+            const stocks = variants.map(v => Number(v.stock ?? 0)).filter(n => Number.isFinite(n))
+            finalPrice = prices.length ? Math.min(...prices) : 0
+            finalMrp = mrps.length ? Math.min(...mrps) : finalPrice
+            inStock = stocks.some(s => s > 0)
+        } else {
+            // No variants: require price and mrp
+            if (!Number.isFinite(price) || !Number.isFinite(mrp)) {
+                return NextResponse.json({ error: "Price and MRP are required when no variants provided" }, { status: 400 })
+            }
+            inStock = true
+        }
+
+        const imagesUrl = await uploadImages(images)
+
+        // Parse attributes optionally
+        let attributes = {}
+        if (attributesRaw) {
+            try { attributes = JSON.parse(attributesRaw) || {} } catch { attributes = {} }
+        }
+
+        const product = await prisma.product.create({
+            data: {
+                name,
+                description,
+                mrp: finalMrp,
+                price: finalPrice,
+                category,
+                sku,
+                images: imagesUrl,
+                hasVariants,
+                variants,
+                attributes,
+                inStock,
+                fastDelivery,
+                storeId,
+            }
+        })
+
+        return NextResponse.json({ message: "Product added successfully", product })
+    } catch (error) {
+        console.error(error)
+        return NextResponse.json({ error: error.code || error.message }, { status: 400 })
+    }
+}
+
+// GET: Get all products of the seller
+export async function GET(request) {
+    try {
+        const { userId } = getAuth(request)
+        const storeId = await authSeller(userId)
+        if (!storeId) return NextResponse.json({ error: "Not authorized" }, { status: 401 })
+
+        const products = await prisma.product.findMany({ where: { storeId }, orderBy: { createdAt: "desc" } })
+        return NextResponse.json({ products })
+    } catch (error) {
+        console.error(error)
+        return NextResponse.json({ error: error.code || error.message }, { status: 400 })
+    }
+}
+
+// PUT: Update a product
+export async function PUT(request) {
+    try {
+        const { userId } = getAuth(request)
+        const storeId = await authSeller(userId)
+        if (!storeId) return NextResponse.json({ error: "Not authorized" }, { status: 401 })
+
+        const formData = await request.formData()
+    const productId = formData.get("productId")
+    const name = formData.get("name")
+    const description = formData.get("description")
+    const category = formData.get("category")
+    const sku = formData.get("sku")
+    const images = formData.getAll("images")
+    // Variants support
+    const hasVariants = String(formData.get("hasVariants") || "").toLowerCase() === "true"
+    const variantsRaw = formData.get("variants")
+    const attributesRaw = formData.get("attributes")
+    const mrp = formData.get("mrp") ? Number(formData.get("mrp")) : undefined
+    const price = formData.get("price") ? Number(formData.get("price")) : undefined
+    const fastDelivery = String(formData.get("fastDelivery") || "").toLowerCase() === "true"
+
+        if (!productId) return NextResponse.json({ error: "Product ID required" }, { status: 400 })
+
+        let product = await prisma.product.findUnique({ where: { id: productId } })
+        if (!product || product.storeId !== storeId) return NextResponse.json({ error: "Not authorized" }, { status: 401 })
+
+        let imagesUrl = product.images
+        if (images.length > 0) {
+            const uploaded = await uploadImages(images)
+            imagesUrl = [...imagesUrl, ...uploaded] // append new images
+        }
+
+        // Compute variants/price/mrp/inStock
+        let variants = product.variants || []
+        let attributes = product.attributes || {}
+        let finalPrice = price ?? product.price
+        let finalMrp = mrp ?? product.mrp
+        let inStock = product.inStock
+
+        if (hasVariants) {
+            try { variants = JSON.parse(variantsRaw || "[]") } catch { variants = [] }
+            const prices = variants.map(v => Number(v.price)).filter(n => Number.isFinite(n))
+            const mrps = variants.map(v => Number(v.mrp ?? v.price)).filter(n => Number.isFinite(n))
+            const stocks = variants.map(v => Number(v.stock ?? 0)).filter(n => Number.isFinite(n))
+            finalPrice = prices.length ? Math.min(...prices) : finalPrice
+            finalMrp = mrps.length ? Math.min(...mrps) : finalMrp
+            inStock = stocks.some(s => s > 0)
+        } else if (price !== undefined || mrp !== undefined) {
+            // no variants, keep numeric price/mrp if provided
+            if (price !== undefined) finalPrice = price
+            if (mrp !== undefined) finalMrp = mrp
+        }
+
+        if (attributesRaw) {
+            try { attributes = JSON.parse(attributesRaw) || attributes } catch {}
+        }
+
+        product = await prisma.product.update({
+            where: { id: productId },
+            data: {
+                name,
+                description,
+                mrp: finalMrp,
+                price: finalPrice,
+                category,
+                sku,
+                images: imagesUrl,
+                hasVariants,
+                variants,
+                attributes,
+                inStock,
+                fastDelivery,
+            }
+        })
+
+        return NextResponse.json({ message: "Product updated successfully", product })
+    } catch (error) {
+        console.error(error)
+        return NextResponse.json({ error: error.code || error.message }, { status: 400 })
+    }
+}
+
+// DELETE: Delete a product
+export async function DELETE(request) {
+    try {
+        const { userId } = getAuth(request)
+        const storeId = await authSeller(userId)
+        if (!storeId) return NextResponse.json({ error: "Not authorized" }, { status: 401 })
+
+        const { searchParams } = new URL(request.url)
+        const productId = searchParams.get("productId")
+        if (!productId) return NextResponse.json({ error: "Product ID required" }, { status: 400 })
+
+        const product = await prisma.product.findUnique({ where: { id: productId } })
+        if (!product || product.storeId !== storeId) return NextResponse.json({ error: "Not authorized" }, { status: 401 })
+
+        await prisma.product.delete({ where: { id: productId } })
+        return NextResponse.json({ message: "Product deleted successfully" })
+    } catch (error) {
+        console.error(error)
+        return NextResponse.json({ error: error.code || error.message }, { status: 400 })
+    }
+}

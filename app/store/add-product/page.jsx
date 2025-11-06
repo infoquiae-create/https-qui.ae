@@ -1,0 +1,628 @@
+'use client'
+import { assets } from "@/assets/assets"
+import { useAuth } from "@clerk/nextjs"
+import axios from "axios"
+import Image from "next/image"
+import { useState, useEffect } from "react"
+import { toast } from "react-hot-toast"
+import { useRouter } from "next/navigation"
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import TiptapImage from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
+import TextAlign from '@tiptap/extension-text-align'
+import { Color } from '@tiptap/extension-color'
+import { TextStyle } from '@tiptap/extension-text-style'
+import Placeholder from '@tiptap/extension-placeholder'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
+
+export default function ProductForm({ product = null, onClose, onSubmitSuccess }) {
+    const router = useRouter()
+    const [dbCategories, setDbCategories] = useState([])
+    const colorOptions = ['Red', 'Blue', 'Green', 'Black', 'White', 'Yellow', 'Purple']
+    const sizeOptions = ['S', 'M', 'L', 'XL', 'XXL']
+
+    const [images, setImages] = useState({ "1": null, "2": null, "3": null, "4": null, "5": null, "6": null, "7": null, "8": null })
+    const [productInfo, setProductInfo] = useState({
+        name: "",
+        brand: "",
+        shortDescription: "",
+        description: "",
+        mrp: "",
+        price: "",
+        category: "",
+        sku: "",
+        colors: [],
+        sizes: [],
+        fastDelivery: false,
+        allowReturn: true,
+        allowReplacement: true,
+        reviews: []
+    })
+    // Variants state
+    const [hasVariants, setHasVariants] = useState(false)
+    const [variants, setVariants] = useState([]) // { options: {color, size[, bundleQty]}, price, mrp, stock, sku?, tag? }
+    // Bulk bundle variant helper state (UI sugar over variants JSON)
+    const [bulkEnabled, setBulkEnabled] = useState(false)
+    const [bulkOptions, setBulkOptions] = useState([
+        { title: 'Buy 1', qty: 1, price: '', mrp: '', stock: 0, tag: '' },
+        { title: 'Bundle of 2', qty: 2, price: '', mrp: '', stock: 0, tag: 'MOST_POPULAR' },
+        { title: 'Bundle of 3', qty: 3, price: '', mrp: '', stock: 0, tag: '' },
+    ])
+    const [reviewInput, setReviewInput] = useState({ name: "", rating: 5, comment: "", image: null })
+    const [loading, setLoading] = useState(false)
+    const [aiUsed, setAiUsed] = useState(false)
+
+    const { getToken } = useAuth()
+
+    // Fetch categories from database
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch('/api/store/categories')
+                const data = await res.json()
+                if (data.categories) {
+                    setDbCategories(data.categories)
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error)
+            }
+        }
+        fetchCategories()
+    }, [])
+
+    // Tiptap editor for description
+    const editor = useEditor({
+        extensions: [
+            StarterKit,
+            TiptapImage.configure({
+                inline: true,
+                allowBase64: true,
+            }),
+            Link.configure({ openOnClick: false }),
+            TextAlign.configure({ types: ['heading', 'paragraph'] }),
+            TextStyle,
+            Color,
+            Table.configure({
+                resizable: true,
+            }),
+            TableRow,
+            TableHeader,
+            TableCell,
+            Placeholder.configure({
+                placeholder: 'Write a detailed product description... Use the toolbar to format text, add images, links, tables and more!'
+            })
+        ],
+        content: productInfo.description,
+        immediatelyRender: false,
+        onUpdate: ({ editor }) => {
+            setProductInfo(prev => ({ ...prev, description: editor.getHTML() }))
+        }
+    })
+
+    // Update editor content when product changes
+    useEffect(() => {
+        if (editor && product?.description && editor.getHTML() !== product.description) {
+            editor.commands.setContent(product.description)
+        }
+    }, [product?.description, editor])
+
+    // Prefill form when editing
+    useEffect(() => {
+        if (product) {
+            setProductInfo({
+                name: product.name || "",
+                brand: product.brand || "",
+                shortDescription: product.shortDescription || "",
+                description: product.description || "",
+                mrp: product.mrp || "",
+                price: product.price || "",
+                category: product.category || "",
+                sku: product.sku || "",
+                colors: product.colors || [],
+                sizes: product.sizes || [],
+                fastDelivery: product.fastDelivery || false,
+                allowReturn: product.allowReturn !== undefined ? product.allowReturn : true,
+                allowReplacement: product.allowReplacement !== undefined ? product.allowReplacement : true,
+                reviews: product.reviews || []
+            })
+            const pv = Array.isArray(product.variants) ? product.variants : []
+            setHasVariants(Boolean(product.hasVariants))
+            setVariants(pv)
+            // Detect bulk bundle style variants (presence of options.bundleQty)
+            const isBulk = pv.length > 0 && pv.every(v => v?.options && (v.options.bundleQty || v.options.bundleQty === 0) && !v.options.color && !v.options.size)
+            if (isBulk) {
+                setBulkEnabled(true)
+                // Map into editable bulkOptions
+                const mapped = pv.map(v => ({
+                    title: v?.options?.title || (Number(v?.options?.bundleQty) === 1 ? 'Buy 1' : `Bundle of ${Number(v?.options?.bundleQty) || 1}`),
+                    qty: Number(v?.options?.bundleQty) || 1,
+                    price: v.price ?? '',
+                    mrp: v.mrp ?? v.price ?? '',
+                    stock: v.stock ?? 0,
+                    tag: v.tag || v.options?.tag || ''
+                }))
+                // Keep sorted by qty
+                mapped.sort((a,b)=>a.qty-b.qty)
+                setBulkOptions(mapped)
+            }
+            // Map existing images to slots - store as strings (URLs)
+            const imgState = { "1": null, "2": null, "3": null, "4": null, "5": null, "6": null, "7": null, "8": null }
+            if (product.images && Array.isArray(product.images)) {
+                product.images.forEach((img, i) => {
+                    if (i < 8) imgState[String(i + 1)] = img // Keep as string URL
+                })
+            }
+            setImages(imgState)
+        }
+    }, [product])
+
+    const onChangeHandler = (e) => {
+        const { name, value } = e.target
+        setProductInfo(prev => ({ ...prev, [name]: value }))
+    }
+
+    const handleImageUpload = async (key, file) => {
+        // Create preview URL for the file
+        const previewUrl = URL.createObjectURL(file)
+        setImages(prev => ({ ...prev, [key]: { file, preview: previewUrl } }))
+
+        // AI analysis only for first image
+        if (key === "1" && file && !aiUsed) {
+            const reader = new FileReader()
+            reader.readAsDataURL(file)
+            reader.onloadend = async () => {
+                const base64String = reader.result.split(",")[1]
+                const mimeType = file.type
+                const token = await getToken()
+
+                try {
+                    await toast.promise(
+                        axios.post("/api/store/ai", { base64Image: base64String, mimeType }, { headers: { Authorization: `Bearer ${token}` } }),
+                        {
+                            loading: "Analyzing image with AI...",
+                            success: (res) => {
+                                const data = res.data
+                                if (data.name && data.description) {
+                                    setProductInfo(prev => ({
+                                        ...prev,
+                                        name: data.name,
+                                        description: data.description
+                                    }))
+                                    setAiUsed(true)
+                                    return "AI filled product info 🎉"
+                                }
+                                return "AI could not analyze the image"
+                            },
+                            error: (err) => err?.response?.data?.error || err.message
+                        }
+                    )
+                } catch (error) { console.error(error) }
+            }
+        }
+    }
+
+    const addReview = () => {
+        if (!reviewInput.name || !reviewInput.comment) return toast.error("Please fill all review fields")
+        setProductInfo(prev => ({ ...prev, reviews: [...prev.reviews, reviewInput] }))
+        setReviewInput({ name: "", rating: 5, comment: "", image: null })
+        toast.success("Review added ✅")
+    }
+
+    const removeReview = (index) => {
+        setProductInfo(prev => ({ ...prev, reviews: prev.reviews.filter((_, i) => i !== index) }))
+    }
+
+    const onSubmitHandler = async (e) => {
+        e.preventDefault()
+        try {
+            const hasImage = Object.values(images).some(img => img)
+            if (!hasImage) return toast.error('Please upload at least one product image')
+
+            setLoading(true)
+            const formData = new FormData()
+
+            Object.entries(productInfo).forEach(([key, value]) => {
+                if (['colors', 'sizes'].includes(key)) {
+                    formData.append(key, JSON.stringify(value))
+                } else if (key === 'reviews') {
+                    const cleanReviews = value.map(({ name, rating, comment }) => ({ name, rating, comment }))
+                    formData.append('reviews', JSON.stringify(cleanReviews))
+                } else {
+                    formData.append(key, value)
+                }
+            })
+
+            // Attributes bucket for extra details
+            const attributes = {
+                brand: productInfo.brand,
+                shortDescription: productInfo.shortDescription,
+                ...(bulkEnabled ? { variantType: 'bulk_bundles' } : {})
+            }
+            formData.append('attributes', JSON.stringify(attributes))
+
+            // Variants
+            let variantsToSend = variants
+            let hasVariantsFlag = hasVariants
+            if (bulkEnabled) {
+                // project bulkOptions -> variants array in common shape
+                variantsToSend = bulkOptions
+                    .filter(b => Number(b.qty) > 0 && Number(b.price) > 0)
+                    .map(b => ({
+                        options: { bundleQty: Number(b.qty), title: (b.title || undefined), tag: b.tag || undefined },
+                        price: Number(b.price),
+                        mrp: Number(b.mrp || b.price),
+                        stock: Number(b.stock || 0),
+                    }))
+                hasVariantsFlag = variantsToSend.length > 0
+            }
+            formData.append('hasVariants', String(hasVariantsFlag))
+            if (hasVariantsFlag) {
+                formData.append('variants', JSON.stringify(variantsToSend))
+            }
+
+            Object.keys(images).forEach(key => {
+                const img = images[key]
+                if (img) {
+                    // If it's an object with file property (new upload), use the file
+                    // If it's a string (existing image URL), skip it for new uploads
+                    if (img.file) {
+                        formData.append('images', img.file)
+                    } else if (typeof img === 'string') {
+                        // Keep existing image URLs (for edit mode)
+                        formData.append('existingImages', img)
+                    }
+                }
+            })
+
+            productInfo.reviews.forEach((rev, index) => {
+                if (rev.image) formData.append(`reviewImages_${index}`, rev.image)
+            })
+
+            const token = await getToken()
+            const apiCall = product
+                ? axios.put(`/api/store/product`, formData, { headers: { Authorization: `Bearer ${token}` } })
+                : axios.post('/api/store/product', formData, { headers: { Authorization: `Bearer ${token}` } })
+
+            const { data } = await apiCall
+            toast.success(data.message)
+            
+            // Call success callback if provided
+            if (onSubmitSuccess) {
+                onSubmitSuccess(data.product || data.updatedProduct)
+            }
+            
+            // Close modal or navigate back
+            if (onClose) {
+                onClose()
+            } else {
+                router.push('/store')
+            }
+        } catch (error) {
+            toast.error(error?.response?.data?.error || error.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto p-4">
+            <form onSubmit={onSubmitHandler} className="bg-white p-6 rounded shadow-lg w-full max-w-4xl space-y-4">
+                <h2 className="text-xl font-semibold">{product ? "Edit Product" : "Add New Product"}</h2>
+
+                {/* Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Product Name</label>
+                        <input name="name" value={productInfo.name} onChange={onChangeHandler} className="w-full border rounded px-3 py-2" placeholder="Enter product name" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Brand</label>
+                        <input name="brand" value={productInfo.brand} onChange={onChangeHandler} className="w-full border rounded px-3 py-2" placeholder="Brand (optional)" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Category</label>
+                        <select name="category" value={productInfo.category} onChange={onChangeHandler} className="w-full border rounded px-3 py-2">
+                            <option value="">Select category</option>
+                            {dbCategories.map(cat => {
+                                if (!cat.parentId) {
+                                    // Parent category
+                                    return [
+                                        <option key={cat.id} value={cat.name} className="font-semibold">
+                                            {cat.name}
+                                        </option>,
+                                        // Subcategories
+                                        ...cat.children.map(child => (
+                                            <option key={child.id} value={child.name} className="pl-4">
+                                                &nbsp;&nbsp;&nbsp;&nbsp;{child.name}
+                                            </option>
+                                        ))
+                                    ]
+                                }
+                                return null
+                            })}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1">SKU</label>
+                        <input name="sku" value={productInfo.sku || ""} onChange={onChangeHandler} className="w-full border rounded px-3 py-2" placeholder="Stock Keeping Unit (optional)" />
+                    </div>
+                    <div className="flex flex-col gap-3 mt-6 md:col-span-2">
+                        <label className="inline-flex items-center gap-2">
+                            <input type="checkbox" checked={productInfo.fastDelivery} onChange={(e)=> setProductInfo(p=>({...p, fastDelivery: e.target.checked}))} />
+                            <span className="text-sm font-medium">Fast Delivery</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2">
+                            <input type="checkbox" checked={productInfo.allowReturn} onChange={(e)=> setProductInfo(p=>({...p, allowReturn: e.target.checked}))} />
+                            <span className="text-sm font-medium">Allow Return (7 days after delivery)</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2">
+                            <input type="checkbox" checked={productInfo.allowReplacement} onChange={(e)=> setProductInfo(p=>({...p, allowReplacement: e.target.checked}))} />
+                            <span className="text-sm font-medium">Allow Replacement (7 days after delivery)</span>
+                        </label>
+                    </div>
+                </div>
+
+                {/* Pricing */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Regular Price (MRP)</label>
+                        <input type="number" step="0.01" name="mrp" value={productInfo.mrp} onChange={onChangeHandler} className="w-full border rounded px-3 py-2" placeholder="0.00" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Sale Price</label>
+                        <input type="number" step="0.01" name="price" value={productInfo.price} onChange={onChangeHandler} className="w-full border rounded px-3 py-2" placeholder="0.00" />
+                    </div>
+                </div>
+
+                {/* Descriptions */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Short Description</label>
+                    <input name="shortDescription" value={productInfo.shortDescription} onChange={onChangeHandler} className="w-full border rounded px-3 py-2" placeholder="One-liner overview" />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium mb-1">Description (Rich Text)</label>
+                    
+                    {/* Toolbar */}
+                    <div className="border border-gray-300 rounded-t bg-white p-3 flex flex-wrap gap-1.5 shadow-sm">
+                        <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive('bold') ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Bold"><strong>B</strong></button>
+                        <button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive('italic') ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Italic"><em>I</em></button>
+                        <button type="button" onClick={() => editor?.chain().focus().toggleStrike().run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive('strike') ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Strikethrough"><s>S</s></button>
+                        <div className="w-px h-6 bg-gray-300 self-center mx-1"></div>
+                        <button type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive('heading', { level: 1 }) ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Heading 1">H1</button>
+                        <button type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive('heading', { level: 2 }) ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Heading 2">H2</button>
+                        <button type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive('heading', { level: 3 }) ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Heading 3">H3</button>
+                        <div className="w-px h-6 bg-gray-300 self-center mx-1"></div>
+                        <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive('bulletList') ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Bullet List">• List</button>
+                        <button type="button" onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive('orderedList') ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Numbered List">1. List</button>
+                        <div className="w-px h-6 bg-gray-300 self-center mx-1"></div>
+                        <button type="button" onClick={() => editor?.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: false }).run()} className="px-3 py-1.5 rounded text-sm font-medium bg-gray-100 hover:bg-gray-200 transition-all" title="Insert Table">📊 <span className="hidden sm:inline">Table</span></button>
+                        <button type="button" onClick={() => editor?.chain().focus().addColumnAfter().run()} disabled={!editor?.can().addColumnAfter()} className="px-2 py-1.5 rounded text-xs font-medium bg-gray-100 hover:bg-gray-200 transition-all disabled:opacity-30" title="Add Column">+ Col</button>
+                        <button type="button" onClick={() => editor?.chain().focus().deleteColumn().run()} disabled={!editor?.can().deleteColumn()} className="px-2 py-1.5 rounded text-xs font-medium bg-gray-100 hover:bg-gray-200 transition-all disabled:opacity-30" title="Delete Column">- Col</button>
+                        <button type="button" onClick={() => editor?.chain().focus().addRowAfter().run()} disabled={!editor?.can().addRowAfter()} className="px-2 py-1.5 rounded text-xs font-medium bg-gray-100 hover:bg-gray-200 transition-all disabled:opacity-30" title="Add Row">+ Row</button>
+                        <button type="button" onClick={() => editor?.chain().focus().deleteRow().run()} disabled={!editor?.can().deleteRow()} className="px-2 py-1.5 rounded text-xs font-medium bg-gray-100 hover:bg-gray-200 transition-all disabled:opacity-30" title="Delete Row">- Row</button>
+                        <button type="button" onClick={() => editor?.chain().focus().deleteTable().run()} disabled={!editor?.can().deleteTable()} className="px-2 py-1.5 rounded text-xs font-medium bg-red-100 hover:bg-red-200 transition-all disabled:opacity-30" title="Delete Table">🗑️</button>
+                        <div className="w-px h-6 bg-gray-300 self-center mx-1"></div>
+                        <button type="button" onClick={() => editor?.chain().focus().setTextAlign('left').run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive({ textAlign: 'left' }) ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Align Left">⬅</button>
+                        <button type="button" onClick={() => editor?.chain().focus().setTextAlign('center').run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive({ textAlign: 'center' }) ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Align Center">↔</button>
+                        <button type="button" onClick={() => editor?.chain().focus().setTextAlign('right').run()} className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${editor?.isActive({ textAlign: 'right' }) ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200'}`} title="Align Right">➡</button>
+                        <div className="w-px h-6 bg-gray-300 self-center mx-1"></div>
+                        <label className="px-3 py-1.5 rounded text-sm font-medium bg-green-100 hover:bg-green-200 transition-all cursor-pointer flex items-center gap-1" title="Upload Image">
+                            🖼️ <span className="hidden sm:inline">Image</span>
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0]
+                                    if (!file) return
+                                    
+                                    try {
+                                        const formData = new FormData()
+                                        formData.append('image', file)
+                                        
+                                        const token = await getToken()
+                                        const { data } = await axios.post('/api/store/upload-image', formData, {
+                                            headers: { Authorization: `Bearer ${token}` }
+                                        })
+                                        
+                                        editor?.chain().focus().setImage({ src: data.url }).run()
+                                        toast.success('Image uploaded!')
+                                    } catch (error) {
+                                        toast.error('Failed to upload image')
+                                    }
+                                    e.target.value = ''
+                                }}
+                            />
+                        </label>
+                        <button type="button" onClick={() => {
+                            const url = prompt('Enter link URL:')
+                            if (url) editor?.chain().focus().setLink({ href: url }).run()
+                        }} className="px-3 py-1.5 rounded text-sm font-medium bg-gray-100 hover:bg-gray-200 transition-all" title="Add Link">🔗 <span className="hidden sm:inline">Link</span></button>
+                        <input type="color" onChange={(e) => editor?.chain().focus().setColor(e.target.value).run()} className="w-10 h-8 rounded border-2 cursor-pointer hover:border-blue-400 transition-all" title="Text Color" />
+                    </div>
+                    
+                    {/* Editor */}
+                    <EditorContent 
+                        editor={editor} 
+                        className="border border-t-0 border-gray-300 rounded-b bg-white p-4 min-h-[250px] max-h-[500px] overflow-y-auto prose prose-slate max-w-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all"
+                    />
+                </div>
+
+                {/* Images */}
+                <div>
+                    <label className="block text-sm font-medium mb-2">Product Images (up to 8)</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {Object.keys(images).map((key) => {
+                            const img = images[key]
+                            const hasImage = img && (img.preview || typeof img === 'string')
+                            
+                            return (
+                                <label key={key} className="relative border rounded flex items-center justify-center h-32 cursor-pointer bg-gray-50 hover:bg-gray-100 overflow-hidden group">
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e)=> e.target.files && handleImageUpload(key, e.target.files[0])} />
+                                    {hasImage ? (
+                                        <>
+                                            <Image 
+                                                src={img.preview || img} 
+                                                alt={`Product ${key}`}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span className="text-white text-sm">Change</span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="text-center">
+                                            <span className="text-gray-400 text-sm">+ Image {key}</span>
+                                        </div>
+                                    )}
+                                </label>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* Variants Section */}
+                <div className="border-t pt-4">
+                    <label className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            checked={hasVariants}
+                            onChange={(e) => setHasVariants(e.target.checked)}
+                        />
+                        <span className="font-medium">This product has variants (e.g., size/color)</span>
+                    </label>
+
+                    {/* Bulk bundles toggle */}
+                    <div className="mt-3">
+                        <label className="inline-flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={bulkEnabled}
+                                onChange={(e)=>{
+                                    const enabled = e.target.checked
+                                    setBulkEnabled(enabled)
+                                    if (enabled && !hasVariants) setHasVariants(true)
+                                }}
+                            />
+                            <span className="font-medium">Enable Bulk Bundles (Buy 1 / Bundle of 2 / 3 / ... with own pricing)</span>
+                        </label>
+                    </div>
+
+                    {/* Bulk bundles editor */}
+                    {bulkEnabled && (
+                        <div className="mt-3 space-y-3">
+                            <div className="text-sm text-gray-600">Configure bundle quantities and pricing. At least one row is required.</div>
+                            <div className="grid grid-cols-7 gap-2 font-medium text-sm text-gray-700">
+                                <div>Label</div>
+                                <div>Qty</div>
+                                <div>Price</div>
+                                <div>MRP</div>
+                                <div>Stock</div>
+                                <div>Tag</div>
+                                <div></div>
+                            </div>
+                            <div className="space-y-2">
+                                {bulkOptions.map((b, idx)=> (
+                                    <div key={idx} className="grid grid-cols-7 gap-2 items-center">
+                                        <input className="border rounded px-2 py-1" placeholder="e.g., Buy 1 / Bundle of 2" value={b.title || ''}
+                                            onChange={(e)=>{ const v=[...bulkOptions]; v[idx] = { ...b, title: e.target.value }; setBulkOptions(v)}} />
+                                        <input className="border rounded px-2 py-1" type="number" min={1} value={b.qty}
+                                            onChange={(e)=>{
+                                                const v=[...bulkOptions]; v[idx] = { ...b, qty: Number(e.target.value) }; setBulkOptions(v)
+                                            }} />
+                                        <input className="border rounded px-2 py-1" type="number" step="0.01" placeholder="Price" value={b.price}
+                                            onChange={(e)=>{ const v=[...bulkOptions]; v[idx] = { ...b, price: e.target.value }; setBulkOptions(v)}} />
+                                        <input className="border rounded px-2 py-1" type="number" step="0.01" placeholder="MRP" value={b.mrp}
+                                            onChange={(e)=>{ const v=[...bulkOptions]; v[idx] = { ...b, mrp: e.target.value }; setBulkOptions(v)}} />
+                                        <input className="border rounded px-2 py-1" type="number" placeholder="Stock" value={b.stock}
+                                            onChange={(e)=>{ const v=[...bulkOptions]; v[idx] = { ...b, stock: Number(e.target.value) }; setBulkOptions(v)}} />
+                                        <select className="border rounded px-2 py-1" value={b.tag}
+                                            onChange={(e)=>{ const v=[...bulkOptions]; v[idx] = { ...b, tag: e.target.value }; setBulkOptions(v)}}>
+                                            <option value="">None</option>
+                                            <option value="MOST_POPULAR">Most Popular</option>
+                                            <option value="BEST_VALUE">Best Value</option>
+                                        </select>
+                                        <div className="text-right">
+                                            <button type="button" className="text-red-600 text-sm" onClick={()=> setBulkOptions(bulkOptions.filter((_,i)=>i!==idx))}>Remove</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <button type="button" className="text-green-600 text-sm font-medium" onClick={()=> setBulkOptions([...bulkOptions, { title: '', qty: 1, price: '', mrp: '', stock: 0, tag: '' }])}>+ Add Bundle</button>
+                        </div>
+                    )}
+
+                    {/* Classic size/color variants editor */}
+                    {hasVariants && !bulkEnabled && (
+                        <div className="mt-3 space-y-3">
+                            <div className="text-sm text-gray-600">Add variant rows below. Each variant can have color, size, price, MRP, and stock.</div>
+                            
+                            {/* Column Headers */}
+                            <div className="grid grid-cols-5 gap-2 font-medium text-sm text-gray-700">
+                                <div>Color</div>
+                                <div>Size</div>
+                                <div>Price</div>
+                                <div>MRP</div>
+                                <div>Stock</div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                {variants.map((v, idx) => (
+                                    <div key={idx} className="grid grid-cols-5 gap-2">
+                                        <input className="border rounded px-2 py-1" placeholder="Color"
+                                            value={v.options?.color || ''}
+                                            onChange={(e)=>{
+                                                const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), color:e.target.value}}; setVariants(nv);
+                                            }} />
+                                        <input className="border rounded px-2 py-1" placeholder="Size"
+                                            value={v.options?.size || ''}
+                                            onChange={(e)=>{
+                                                const nv=[...variants]; nv[idx]={...v, options:{...(v.options||{}), size:e.target.value}}; setVariants(nv);
+                                            }} />
+                                        <input className="border rounded px-2 py-1" placeholder="Price" type="number" step="0.01"
+                                            value={v.price ?? ''}
+                                            onChange={(e)=>{
+                                                const nv=[...variants]; nv[idx]={...v, price:Number(e.target.value)}; setVariants(nv);
+                                            }} />
+                                        <input className="border rounded px-2 py-1" placeholder="MRP" type="number" step="0.01"
+                                            value={v.mrp ?? ''}
+                                            onChange={(e)=>{
+                                                const nv=[...variants]; nv[idx]={...v, mrp:Number(e.target.value)}; setVariants(nv);
+                                            }} />
+                                        <div className="flex items-center gap-2">
+                                            <input className="border rounded px-2 py-1 w-full" placeholder="Stock" type="number"
+                                                value={v.stock ?? 0}
+                                                onChange={(e)=>{
+                                                    const nv=[...variants]; nv[idx]={...v, stock:Number(e.target.value)}; setVariants(nv);
+                                                }} />
+                                            <button type="button" className="text-red-600 text-sm whitespace-nowrap" onClick={()=>{
+                                                setVariants(variants.filter((_,i)=>i!==idx))
+                                            }}>✕</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <button type="button" className="text-green-600 text-sm font-medium" onClick={()=> setVariants([...variants, { options:{}, price:0, mrp:0, stock:0 }])}>+ Add Variant</button>
+                        </div>
+                    )}
+                </div>
+
+                <button disabled={loading} className="bg-slate-800 text-white px-6 py-2 rounded hover:bg-slate-900 transition">
+                    {product ? "Update Product" : "Add Product"}
+                </button>
+                <button 
+                    type="button" 
+                    onClick={() => onClose ? onClose() : router.back()} 
+                    className="ml-2 bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500 transition"
+                >
+                    Cancel
+                </button>
+            </form>
+        </div>
+    )
+}
