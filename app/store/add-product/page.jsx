@@ -311,9 +311,10 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto p-4">
-            <form onSubmit={onSubmitHandler} className="bg-white p-6 rounded shadow-lg w-full max-w-4xl space-y-4">
-                <h2 className="text-xl font-semibold">{product ? "Edit Product" : "Add New Product"}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+            <div className="w-full max-w-4xl my-8">
+                <form onSubmit={onSubmitHandler} className="bg-white p-6 rounded shadow-lg space-y-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
+                    <h2 className="text-xl font-semibold sticky top-0 bg-white py-2 border-b mb-4">{product ? "Edit Product" : "Add New Product"}</h2>
 
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -620,17 +621,20 @@ export default function ProductForm({ product = null, onClose, onSubmitSuccess }
                     )}
                 </div>
 
-                <button disabled={loading} className="bg-slate-800 text-white px-6 py-2 rounded hover:bg-slate-900 transition">
-                    {product ? "Update Product" : "Add Product"}
-                </button>
-                <button 
-                    type="button" 
-                    onClick={() => onClose ? onClose() : router.back()} 
-                    className="ml-2 bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500 transition"
-                >
-                    Cancel
-                </button>
-            </form>
+                    <div className="sticky bottom-0 bg-white pt-4 border-t flex gap-2">
+                        <button disabled={loading} className="bg-slate-800 text-white px-6 py-2 rounded hover:bg-slate-900 transition">
+                            {product ? "Update Product" : "Add Product"}
+                        </button>
+                        <button 
+                            type="button" 
+                            onClick={() => onClose ? onClose() : router.back()} 
+                            className="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500 transition"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 }
