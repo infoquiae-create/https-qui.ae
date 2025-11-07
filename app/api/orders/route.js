@@ -175,11 +175,13 @@ export async function POST(request){
                     data: {
                         userId: 'guest', // Temporary user ID for guests
                         name: guestInfo.name,
+                        email: guestInfo.email,
                         phone: guestInfo.phone,
                         address: guestInfo.address,
-                        city: 'Guest',
-                        state: 'Guest',
-                        zip: '000000'
+                        city: guestInfo.city || 'Guest',
+                        state: guestInfo.state || 'Guest',
+                        zip: guestInfo.zip || '000000',
+                        country: guestInfo.country || 'UAE'
                     }
                 });
                 orderData.addressId = guestAddress.id;
