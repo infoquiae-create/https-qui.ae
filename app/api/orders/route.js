@@ -338,7 +338,19 @@ export async function POST(request){
                         })
                     }
 
-                    return NextResponse.json({message: 'Orders Placed Successfully', order})
+                    // Return all orders for guests, single order for users
+                    if (isGuest) {
+                        const orders = await prisma.order.findMany({
+                            where: { id: { in: orderIds } },
+                            include: {
+                                user: true,
+                                orderItems: { include: { product: true } }
+                            }
+                        });
+                        return NextResponse.json({ message: 'Orders Placed Successfully', orders });
+                    } else {
+                        return NextResponse.json({ message: 'Orders Placed Successfully', order });
+                    }
 
     } catch (error) {
         console.error(error);

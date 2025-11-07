@@ -25,6 +25,7 @@ const ProductDetails = ({ product }) => {
   const router = useRouter();
   const dispatch = useDispatch();
   const cartCount = useSelector((state) => state.cart.total);
+  const cartItems = useSelector((state) => state.cart.cartItems);
 
   const averageRating = product.rating?.length
     ? product.rating.reduce((acc, item) => acc + item.rating, 0) / product.rating.length
@@ -562,17 +563,27 @@ const ProductDetails = ({ product }) => {
                 </svg>
               </button>
 
-              <button 
-                onClick={handleAddToCart}
-                className="relative w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-lg transition flex items-center justify-center flex-shrink-0"
-              >
-                <ShoppingCartIcon size={20} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
-                    {cartCount > 99 ? '99+' : cartCount}
-                  </span>
-                )}
-              </button>
+              {cartItems[product.id] ? (
+                <button
+                  onClick={() => router.push('/cart')}
+                  className="flex-1 bg-green-600 text-white py-3.5 px-6 rounded-lg font-semibold text-base hover:bg-green-700 transition flex items-center justify-center gap-2"
+                >
+                  Go to Cart
+                  <ShoppingCartIcon size={20} />
+                </button>
+              ) : (
+                <button 
+                  onClick={handleAddToCart}
+                  className="relative w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-lg transition flex items-center justify-center flex-shrink-0"
+                >
+                  <ShoppingCartIcon size={20} />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                      {cartCount > 99 ? '99+' : cartCount}
+                    </span>
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Wishlist & Share */}

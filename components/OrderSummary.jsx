@@ -34,12 +34,13 @@ const OrderSummary = ({ totalPrice, items }) => {
     name: '',
     email: '',
     phone: '',
-        countryCode: countryCodes[0].code, // Set default to first country code
+    countryCode: countryCodes[0].code, // Set default to first country code
     address: '',
+    city: '',
     state: '',
     zip: '00000',
     country: 'UAE'
-    });
+});
 
     // Shipping settings (defaults mirror prior behavior)
     const [shipping, setShipping] = useState({
@@ -160,6 +161,7 @@ const OrderSummary = ({ totalPrice, items }) => {
                 if (!guestInfo.email) missingFields.push('Email');
                 if (!guestInfo.phone) missingFields.push('Phone');
                 if (!guestInfo.address) missingFields.push('Address');
+                if (!guestInfo.city) missingFields.push('City');
                 if (!guestInfo.state) missingFields.push('Emirate');
                 if (!guestInfo.country) missingFields.push('Country');
                 if (missingFields.length > 0) {
@@ -172,19 +174,24 @@ const OrderSummary = ({ totalPrice, items }) => {
                     guestInfo
                 };
 
-                // Create guest order (no token needed)
-                const { data } = await axios.post('/api/orders', orderData);
-
-                if (data && data.order && data.order.id) {
-                    if (paymentMethod === 'STRIPE') {
-                        window.location.href = data.session.url;
+                try {
+                    const { data } = await axios.post('/api/orders', orderData);
+                    // Handle array of orders for guests
+                    if (data && ((data.orders && Array.isArray(data.orders) && data.orders.length > 0) || (data.order && data.order.id))) {
+                        if (paymentMethod === 'STRIPE') {
+                            window.location.href = data.session.url;
+                        } else {
+                            dispatch(clearCart());
+                            toast.success(data.message);
+                            // For guests, redirect to first order success (or show all order IDs)
+                            const orderId = data.orders ? data.orders[0].id : data.order.id;
+                            router.push(`/order-success?orderId=${orderId}`);
+                        }
                     } else {
-                        dispatch(clearCart());
-                        toast.success(data.message);
-                        router.push(`/order-success?orderId=${data.order.id}`);
+                        router.push('/order-failed');
                     }
-                } else {
-                    router.push('/order-failed');
+                } catch (err) {
+                    toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Order Failed. Please try again.');
                 }
                 return;
             }
@@ -274,14 +281,14 @@ const OrderSummary = ({ totalPrice, items }) => {
                             type="text"
                             placeholder="Full Name *"
                             value={guestInfo.name}
-                            onChange={(e) => setGuestInfo({...guestInfo, name: e.target.value})}
+                            onChange={e => setGuestInfo({...guestInfo, name: e.target.value})}
                             className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
                         />
                         <input
                             type="email"
                             placeholder="Email Address *"
                             value={guestInfo.email}
-                            onChange={(e) => setGuestInfo({...guestInfo, email: e.target.value})}
+                            onChange={e => setGuestInfo({...guestInfo, email: e.target.value})}
                             className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
                         />
                         <div className='flex gap-2'>
@@ -305,11 +312,18 @@ const OrderSummary = ({ totalPrice, items }) => {
                         <textarea
                             placeholder="Street Address *"
                             value={guestInfo.address}
-                            onChange={(e) => setGuestInfo({...guestInfo, address: e.target.value})}
+                            onChange={e => setGuestInfo({...guestInfo, address: e.target.value})}
                             rows="2"
                             className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm resize-none'
                         />
                         <div className='grid grid-cols-2 gap-2'>
+                            <input
+                                type="text"
+                                placeholder="City *"
+                                value={guestInfo.city || ''}
+                                onChange={e => setGuestInfo({...guestInfo, city: e.target.value})}
+                                className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
+                            />
                             <select
                                 value={guestInfo.state}
                                 onChange={e => setGuestInfo({...guestInfo, state: e.target.value})}
@@ -326,7 +340,6 @@ const OrderSummary = ({ totalPrice, items }) => {
                             </select>
                         </div>
                         <div className='grid grid-cols-2 gap-2'>
-                            {/* Hide postcode for guests, always send 00000 */}
                             <input
                                 type="hidden"
                                 value={guestInfo.zip || '00000'}
