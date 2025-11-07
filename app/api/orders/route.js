@@ -170,6 +170,18 @@ export async function POST(request){
 
             // Add guest or user specific fields
             if (isGuest) {
+                // Ensure guest user exists in database for address foreign key
+                await prisma.user.upsert({
+                    where: { id: 'guest' },
+                    update: {},
+                    create: {
+                        id: 'guest',
+                        name: 'Guest User',
+                        email: 'guest@system.local',
+                        cart: []
+                    }
+                });
+
                 // Create a temporary address for guest
                 const guestAddress = await prisma.address.create({
                     data: {
