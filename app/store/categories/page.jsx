@@ -1,4 +1,6 @@
 'use client'
+
+export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { PlusIcon, EditIcon, TrashIcon, FolderIcon, ImageIcon, XIcon } from 'lucide-react'
 import { IKImage, IKUpload } from 'imagekitio-next'

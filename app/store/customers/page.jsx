@@ -1,4 +1,6 @@
 'use client'
+
+export const dynamic = 'force-dynamic'
 import Loading from "@/components/Loading"
 import { useAuth } from "@clerk/nextjs"
 import axios from "axios"

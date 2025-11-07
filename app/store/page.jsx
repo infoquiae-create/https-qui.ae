@@ -3,6 +3,8 @@ import { dummyStoreDashboardData } from "@/assets/assets"
 import Loading from "@/components/Loading"
 import { useAuth } from "@clerk/nextjs"
 import axios from "axios"
+
+export const dynamic = 'force-dynamic'
 import { CircleDollarSignIcon, ShoppingBasketIcon, StarIcon, TagsIcon, UsersIcon, ShoppingCartIcon } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"

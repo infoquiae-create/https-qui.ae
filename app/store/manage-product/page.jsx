@@ -1,4 +1,6 @@
 'use client'
+
+export const dynamic = 'force-dynamic'
 import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
 import Image from "next/image"

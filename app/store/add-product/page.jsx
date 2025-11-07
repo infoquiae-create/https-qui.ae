@@ -20,6 +20,8 @@ import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
 
+export const dynamic = 'force-dynamic'
+
 export default function ProductForm({ product = null, onClose, onSubmitSuccess }) {
     const router = useRouter()
     const [dbCategories, setDbCategories] = useState([])
