@@ -1,9 +1,19 @@
 'use client'
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import Loading from '@/components/Loading';
 
 export default function OrderSuccess() {
+  return (
+    <Suspense>
+      <OrderSuccessContent />
+    </Suspense>
+  );
+
+}
+
+function OrderSuccessContent() {
   const params = useSearchParams();
   const router = useRouter();
   const [orders, setOrders] = useState(null);
@@ -16,6 +26,7 @@ export default function OrderSuccess() {
       return;
     }
     fetchOrder(orderId);
+    // eslint-disable-next-line
   }, [params, router]);
 
   const fetchOrder = async (orderId) => {
