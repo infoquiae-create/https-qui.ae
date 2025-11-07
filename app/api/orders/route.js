@@ -309,7 +309,7 @@ export async function POST(request){
                 payment_method_types: ['card'],
                 line_items: [{
                     price_data:{
-                        currency: 'inr',
+                        currency: 'aed',
                         product_data:{
                             name: 'Order'
                         },
@@ -330,13 +330,15 @@ export async function POST(request){
             return NextResponse.json({session})
          }
 
-          // clear the cart
-          await prisma.user.update({
-            where: {id: userId},
-            data: {cart : {}}
-          })
+                    // clear the cart only for logged-in users
+                    if (userId) {
+                        await prisma.user.update({
+                            where: {id: userId},
+                            data: {cart : {}}
+                        })
+                    }
 
-          return NextResponse.json({message: 'Orders Placed Successfully'})
+                    return NextResponse.json({message: 'Orders Placed Successfully'})
 
     } catch (error) {
         console.error(error);

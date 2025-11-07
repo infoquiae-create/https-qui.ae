@@ -150,10 +150,17 @@ const OrderSummary = ({ totalPrice, items }) => {
         try {
             // Guest checkout validation
             if (!isSignedIn && isGuestCheckout) {
-                if (!guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address || !guestInfo.city || !guestInfo.state || !guestInfo.country) {
-                    return toast.error('Please fill all required fields (*)');
+                const missingFields = [];
+                if (!guestInfo.name) missingFields.push('Name');
+                if (!guestInfo.email) missingFields.push('Email');
+                if (!guestInfo.phone) missingFields.push('Phone');
+                if (!guestInfo.address) missingFields.push('Address');
+                if (!guestInfo.city) missingFields.push('City');
+                if (!guestInfo.state) missingFields.push('State');
+                if (!guestInfo.country) missingFields.push('Country');
+                if (missingFields.length > 0) {
+                    return toast.error(`Please fill: ${missingFields.join(', ')}`);
                 }
-                
                 const orderData = {
                     items,
                     paymentMethod,

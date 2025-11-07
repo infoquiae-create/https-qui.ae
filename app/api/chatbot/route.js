@@ -80,7 +80,7 @@ ${coupons.length > 0 ? coupons.map(c =>
 6. If you don't know something, admit it and suggest contacting support
 7. Keep responses concise but informative
 8. Use emojis occasionally to be friendly 😊
-9. Always mention product prices in Indian Rupees (AED)
+9. Always mention product prices in AED (United Arab Emirates Dirham)
 10. Provide product links when relevant: /product/[productId]
 
 Customer Question: ${message}

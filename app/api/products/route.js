@@ -7,40 +7,71 @@ export async function GET(request){
         const { searchParams } = new URL(request.url);
         const sortBy = searchParams.get('sortBy'); // 'newest', 'orders', 'rating'
         
+        // Fetch products with only essential data and active stores
         let products = await prisma.product.findMany({
-            where: { inStock: true },
-            include: {
-                rating: {
+            where: { 
+                inStock: true,
+                store: { isActive: true } // Filter at database level
+            },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                shortDescription: true,
+                mrp: true,
+                price: true,
+                images: true,
+                category: true,
+                sku: true,
+                inStock: true,
+                hasVariants: true,
+                variants: true,
+                attributes: true,
+                hasBulkPricing: true,
+                bulkPricing: true,
+                fastDelivery: true,
+                allowReturn: true,
+                allowReplacement: true,
+                storeId: true,
+                createdAt: true,
+                updatedAt: true,
+                // Only get count/aggregate data, not full relations
+                _count: {
                     select: {
-                        createdAt: true, 
-                        rating: true, 
-                        review: true,
-                        user: { select: { name: true, image: true } }
+                        rating: true,
+                        orderItems: true
                     }
                 },
-                store: true,
-                orderItems: true
+                rating: {
+                    select: {
+                        rating: true // Only get rating values for average calculation
+                    }
+                },
+                store: {
+                    select: {
+                        id: true,
+                        name: true,
+                        username: true,
+                        logo: true
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' }
         });
-
-        // Remove products with inactive stores
-        products = products.filter(product => product.store?.isActive);
         
-        // Calculate metrics for each product
+        // Calculate metrics for each product (much faster with less data)
         products = products.map(product => {
-            const totalOrders = product.orderItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
             const avgRating = product.rating?.length > 0
                 ? product.rating.reduce((sum, r) => sum + r.rating, 0) / product.rating.length
                 : 0;
             
-            // Remove orderItems from the response
-            const { orderItems, ...productData } = product;
+            const { rating, _count, ...productData } = product;
             
             return {
                 ...productData,
-                totalOrders,
-                averageRating: avgRating
+                totalOrders: _count.orderItems,
+                averageRating: avgRating,
+                ratingCount: _count.rating
             };
         });
         

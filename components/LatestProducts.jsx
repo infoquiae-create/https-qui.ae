@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Image from 'next/image'
 import Link from 'next/link'
-import { FaStar, FaRupeeSign } from 'react-icons/fa'
+import { FaStar } from 'react-icons/fa'
 import { ShoppingCartIcon } from 'lucide-react'
 import { addToCart, uploadCart } from '@/lib/features/cart/cartSlice'
 import { useAuth } from '@clerk/nextjs'
@@ -127,7 +127,7 @@ const ProductCard = ({ product }) => {
           <div className="flex items-center gap-2">
             {/* Current Price */}
             <p className="text-black font-bold text-base flex items-baseline">
-              <FaRupeeSign size={16} className="mr-1" />
+              <span className="mr-1">AED</span>
               <span>{intPrice}</span>
               <span className="text-xs align-top ml-0.5">.{decPrice}</span>
             </p>
@@ -135,7 +135,7 @@ const ProductCard = ({ product }) => {
             {/* Original Price */}
             {product.mrp && product.mrp > product.price && (
               <p className="text-gray-400 text-xs line-through flex items-baseline">
-                <FaRupeeSign size={12} className="mr-0.5" />
+                <span className="mr-0.5">AED</span>
                 <span>{intOrig}</span>
                 <span className="text-[10px] align-top ml-0.5">.{decOrig}</span>
               </p>
