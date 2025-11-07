@@ -3,6 +3,8 @@ import StoreLayout from "@/components/store/StoreLayout";
 import {SignedIn, SignedOut, SignIn} from "@clerk/nextjs"
 import { ImageKitContext } from 'imagekitio-next'
 
+export const dynamic = 'force-dynamic'
+
 export default function RootAdminLayout({ children }) {
 
     const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY

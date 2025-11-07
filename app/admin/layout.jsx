@@ -2,6 +2,8 @@
 import AdminLayout from "@/components/admin/AdminLayout";
 import {SignedIn, SignedOut, SignIn} from "@clerk/nextjs"
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
     title: "Qui. - Admin",
     description: "Qui. - Admin",
