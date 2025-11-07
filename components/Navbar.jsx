@@ -1,7 +1,7 @@
 
 'use client';
 
-import { PackageIcon, Search, ShoppingCart, LifeBuoy, Menu, X, HeartIcon } from "lucide-react";
+import { PackageIcon, Search, ShoppingCart, LifeBuoy, Menu, X, HeartIcon, StarIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
