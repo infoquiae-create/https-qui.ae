@@ -13,7 +13,7 @@ export async function POST(request){
 
         // Guest checkout validation
         if (isGuest) {
-            if (!guestInfo || !guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address) {
+            if (!guestInfo || !guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address || !guestInfo.city || !guestInfo.state || !guestInfo.country) {
                 return NextResponse.json({ error: "missing guest information" }, { status: 400 });
             }
             if (!paymentMethod || !items || !Array.isArray(items) || items.length === 0) {
@@ -177,7 +177,7 @@ export async function POST(request){
                         name: guestInfo.name,
                         email: guestInfo.email,
                         phone: guestInfo.phone,
-                        address: guestInfo.address,
+                        street: guestInfo.address, // Map 'address' to 'street' field
                         city: guestInfo.city || 'Guest',
                         state: guestInfo.state || 'Guest',
                         zip: guestInfo.zip || '000000',
