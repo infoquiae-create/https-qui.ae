@@ -1,12 +1,19 @@
 'use client'
 import StoreLayout from "@/components/store/StoreLayout";
-import {SignedIn, SignedOut, SignIn} from "@clerk/nextjs"
+import {SignIn, useAuth} from "@clerk/nextjs"
 import { ImageKitContext } from 'imagekitio-next'
+import { useEffect, useState } from "react"
 
 export default function RootAdminLayout({ children }) {
+    const { isSignedIn, isLoaded } = useAuth()
+    const [mounted, setMounted] = useState(false)
 
     const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY
     const urlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const authenticator = async () => {
         try {
@@ -23,21 +30,24 @@ export default function RootAdminLayout({ children }) {
         }
     }
 
-    return (
-        <>  
-        <SignedIn>
-            <ImageKitContext.Provider value={{ publicKey, urlEndpoint, authenticator }}>
-                <StoreLayout>
-                    {children}
-                </StoreLayout>
-            </ImageKitContext.Provider>
-        </SignedIn>
-        <SignedOut>
+    // Prevent hydration mismatch
+    if (!mounted || !isLoaded) {
+        return null
+    }
+
+    if (!isSignedIn) {
+        return (
             <div className="min-h-screen flex items-center justify-center">
                 <SignIn fallbackRedirectUrl="/store" routing="hash" />
             </div>
-        </SignedOut>
-            
-        </>
+        )
+    }
+
+    return (
+        <ImageKitContext.Provider value={{ publicKey, urlEndpoint, authenticator }}>
+            <StoreLayout>
+                {children}
+            </StoreLayout>
+        </ImageKitContext.Provider>
     );
 }

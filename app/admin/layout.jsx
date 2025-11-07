@@ -1,16 +1,16 @@
-
+'use client'
 import AdminLayout from "@/components/admin/AdminLayout";
-import {SignedIn, SignedOut, SignIn} from "@clerk/nextjs"
-
-export const dynamic = 'force-dynamic'
-
-export const metadata = {
-    title: "Qui. - Admin",
-    description: "Qui. - Admin",
-};
+import {SignIn, useAuth} from "@clerk/nextjs"
+import { useEffect, useState } from "react"
 
 export default function RootAdminLayout({ children }) {
+    const { isSignedIn, isLoaded } = useAuth()
+    const [mounted, setMounted] = useState(false)
     const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     if (!isClerkConfigured) {
         return (
@@ -23,18 +23,22 @@ export default function RootAdminLayout({ children }) {
         );
     }
 
+    // Prevent hydration mismatch
+    if (!mounted || !isLoaded) {
+        return null
+    }
+
+    if (!isSignedIn) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <SignIn fallbackRedirectUrl="/admin" routing="hash"/>
+            </div>
+        )
+    }
+
     return (
-        <>
-            <SignedIn>
-                <AdminLayout>
-                    {children}
-                </AdminLayout>
-            </SignedIn>
-            <SignedOut>
-                <div className="min-h-screen flex items-center justify-center">
-                    <SignIn fallbackRedirectUrl="/admin" routing="hash"/>
-                </div>
-            </SignedOut>
-        </>
+        <AdminLayout>
+            {children}
+        </AdminLayout>
     );
 }
