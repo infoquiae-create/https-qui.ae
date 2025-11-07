@@ -193,7 +193,7 @@ const Hero = () => {
     <div className="mx-0 sm:mx-6">
       <div className="flex max-xl:flex-col gap-6 max-w-7xl mx-auto mt-0 sm:mt-8 mb-6 sm:mb-10">
         {/* === Rotating Hero Section (image only, clickable) === */}
-  <Link href={buttonHref} className={`relative flex-1 rounded-none lg:rounded-3xl min-h-[220px] sm:min-h-[280px] md:min-h-[320px] lg:min-h-[380px] xl:min-h-100 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300`}>
+  <Link href={buttonHref} className={`relative flex-1 rounded-none sm:rounded-3xl min-h-[220px] sm:min-h-[280px] md:min-h-[320px] lg:min-h-[380px] xl:min-h-100 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300`}>
           <Image src={slide.image} alt="Hero Banner" fill priority sizes="(min-width: 1024px) 66vw, 100vw" className={`object-cover ${fade ? 'opacity-100' : 'opacity-0'} transition-opacity duration-700`} />
         </Link>
 
