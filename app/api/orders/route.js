@@ -338,7 +338,7 @@ export async function POST(request){
                         })
                     }
 
-                    return NextResponse.json({message: 'Orders Placed Successfully'})
+                    return NextResponse.json({message: 'Orders Placed Successfully', order})
 
     } catch (error) {
         console.error(error);

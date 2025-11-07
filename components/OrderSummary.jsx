@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import {Protect, useAuth, useUser} from '@clerk/nextjs'
 import axios from 'axios';
 import { clearCart, fetchCart } from '@/lib/features/cart/cartSlice';
+import countryList from 'react-select-country-list';
+import { countryCodes } from '@/assets/countryCodes';
 
 const OrderSummary = ({ totalPrice, items }) => {
 
@@ -24,18 +26,19 @@ const OrderSummary = ({ totalPrice, items }) => {
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [couponCodeInput, setCouponCodeInput] = useState('');
     const [coupon, setCoupon] = useState('');
+    const [loading, setLoading] = useState(false);
     
     // Guest checkout fields
     const [isGuestCheckout, setIsGuestCheckout] = useState(false);
     const [guestInfo, setGuestInfo] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        city: '',
-        state: '',
-        zip: '',
-        country: 'UAE'
+    name: '',
+    email: '',
+    phone: '',
+        countryCode: countryCodes[0].code, // Set default to first country code
+    address: '',
+    state: '',
+    zip: '00000',
+    country: 'UAE'
     });
 
     // Shipping settings (defaults mirror prior behavior)
@@ -147,6 +150,8 @@ const OrderSummary = ({ totalPrice, items }) => {
 
     const handlePlaceOrder = async (e) => {
         e.preventDefault();
+        if (loading) return;
+        setLoading(true);
         try {
             // Guest checkout validation
             if (!isSignedIn && isGuestCheckout) {
@@ -155,8 +160,7 @@ const OrderSummary = ({ totalPrice, items }) => {
                 if (!guestInfo.email) missingFields.push('Email');
                 if (!guestInfo.phone) missingFields.push('Phone');
                 if (!guestInfo.address) missingFields.push('Address');
-                if (!guestInfo.city) missingFields.push('City');
-                if (!guestInfo.state) missingFields.push('State');
+                if (!guestInfo.state) missingFields.push('Emirate');
                 if (!guestInfo.country) missingFields.push('Country');
                 if (missingFields.length > 0) {
                     return toast.error(`Please fill: ${missingFields.join(', ')}`);
@@ -171,13 +175,16 @@ const OrderSummary = ({ totalPrice, items }) => {
                 // Create guest order (no token needed)
                 const { data } = await axios.post('/api/orders', orderData);
 
-                if (paymentMethod === 'STRIPE') {
-                    window.location.href = data.session.url;
+                if (data && data.order && data.order.id) {
+                    if (paymentMethod === 'STRIPE') {
+                        window.location.href = data.session.url;
+                    } else {
+                        dispatch(clearCart());
+                        toast.success(data.message);
+                        router.push(`/order-success?orderId=${data.order.id}`);
+                    }
                 } else {
-                    dispatch(clearCart());
-                    toast.success(data.message);
-                    toast.success(`Order ID: ${data.order.id}. Please save this for tracking.`);
-                    router.push('/');
+                    router.push('/order-failed');
                 }
                 return;
             }
@@ -205,23 +212,31 @@ const OrderSummary = ({ totalPrice, items }) => {
             headers: { Authorization: `Bearer ${token}` }
            })
 
-           if(paymentMethod === 'STRIPE'){
-            window.location.href = data.session.url;
+           if(data && data.order && data.order.id){
+            if(paymentMethod === 'STRIPE'){
+                window.location.href = data.session.url;
+            }else{
+                // Clear cart immediately for COD orders
+                dispatch(clearCart())
+                toast.success(data.message)
+                router.push('/orders')
+                // Fetch updated cart from server to sync
+                dispatch(fetchCart({getToken}))
+            }
            }else{
-            // Clear cart immediately for COD orders
-            dispatch(clearCart())
-            toast.success(data.message)
-            router.push('/orders')
-            // Fetch updated cart from server to sync
-            dispatch(fetchCart({getToken}))
+            router.push('/order-failed');
            }
 
         } catch (error) {
-            toast.error(error?.response?.data?.error || error.message)
+            router.push('/order-failed');
+        } finally {
+            setLoading(false);
         }
 
         
     }
+
+    const allCountries = countryList().getData();
 
     return (
         <div className='w-full bg-white rounded-lg shadow-sm border border-gray-200 p-5'>
@@ -269,13 +284,24 @@ const OrderSummary = ({ totalPrice, items }) => {
                             onChange={(e) => setGuestInfo({...guestInfo, email: e.target.value})}
                             className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
                         />
-                        <input
-                            type="tel"
-                            placeholder="Phone Number *"
-                            value={guestInfo.phone}
-                            onChange={(e) => setGuestInfo({...guestInfo, phone: e.target.value})}
-                            className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
-                        />
+                        <div className='flex gap-2'>
+                            <select
+                                value={guestInfo.countryCode}
+                                onChange={e => setGuestInfo({...guestInfo, countryCode: e.target.value})}
+                                className='border border-slate-300 p-2.5 rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm w-28'
+                            >
+                                {countryCodes.map(({ code }) => (
+                                    <option key={code} value={code}>{code}</option>
+                                ))}
+                            </select>
+                            <input
+                                type="tel"
+                                placeholder="Phone Number *"
+                                value={guestInfo.phone}
+                                onChange={e => setGuestInfo({...guestInfo, phone: e.target.value})}
+                                className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
+                            />
+                        </div>
                         <textarea
                             placeholder="Street Address *"
                             value={guestInfo.address}
@@ -284,36 +310,35 @@ const OrderSummary = ({ totalPrice, items }) => {
                             className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm resize-none'
                         />
                         <div className='grid grid-cols-2 gap-2'>
-                            <input
-                                type="text"
-                                placeholder="City *"
-                                value={guestInfo.city}
-                                onChange={(e) => setGuestInfo({...guestInfo, city: e.target.value})}
-                                className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
-                            />
-                            <input
-                                type="text"
-                                placeholder="State/Emirate *"
+                            <select
                                 value={guestInfo.state}
-                                onChange={(e) => setGuestInfo({...guestInfo, state: e.target.value})}
+                                onChange={e => setGuestInfo({...guestInfo, state: e.target.value})}
                                 className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
-                            />
+                            >
+                                <option value="">Select Emirate *</option>
+                                <option value="Abu Dhabi">Abu Dhabi</option>
+                                <option value="Dubai">Dubai</option>
+                                <option value="Sharjah">Sharjah</option>
+                                <option value="Ajman">Ajman</option>
+                                <option value="Fujairah">Fujairah</option>
+                                <option value="Ras Al Khaimah">Ras Al Khaimah</option>
+                                <option value="Umm Al Quwain">Umm Al Quwain</option>
+                            </select>
                         </div>
                         <div className='grid grid-cols-2 gap-2'>
+                            {/* Hide postcode for guests, always send 00000 */}
                             <input
-                                type="text"
-                                placeholder="ZIP/Postal Code"
-                                value={guestInfo.zip}
-                                onChange={(e) => setGuestInfo({...guestInfo, zip: e.target.value})}
-                                className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
+                                type="hidden"
+                                value={guestInfo.zip || '00000'}
+                                readOnly
                             />
-                            <input
-                                type="text"
-                                placeholder="Country *"
+                            <select
                                 value={guestInfo.country}
-                                onChange={(e) => setGuestInfo({...guestInfo, country: e.target.value})}
+                                onChange={e => setGuestInfo({...guestInfo, country: e.target.value})}
                                 className='border border-slate-300 p-2.5 w-full rounded-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm'
-                            />
+                            >
+                                <option value="UAE">United Arab Emirates</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -389,51 +414,29 @@ const OrderSummary = ({ totalPrice, items }) => {
                         </div>
                     )}
                 </div>
-                {
-                    !coupon ? (
-                        <form onSubmit={e => toast.promise(handleCouponCode(e), { loading: 'Checking Coupon...' })} className='flex gap-2 mt-4'>
-                            <input 
-                                onChange={(e) => setCouponCodeInput(e.target.value)} 
-                                value={couponCodeInput} 
-                                type="text" 
-                                placeholder='Enter coupon code' 
-                                className='border border-gray-300 px-3 py-2 rounded-lg w-full outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-sm' 
-                            />
-                            <button className='bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 font-medium text-sm transition-colors whitespace-nowrap'>Apply</button>
-                        </form>
-                    ) : (
-                        <div className='bg-green-50 border border-green-200 rounded-lg p-3 mt-4 flex items-center justify-between'>
-                            <div>
-                                <p className='text-xs text-gray-600'>Coupon Applied</p>
-                                <p className='font-semibold text-green-700'>{coupon.code.toUpperCase()}</p>
-                            </div>
-                            <button onClick={() => setCoupon('')} className='text-red-500 hover:text-red-700'>
-                                <XIcon size={18} />
-                            </button>
-                        </div>
-                    )
-                }
-            </div>
-            
-            <div className='flex justify-between items-center py-4 border-t border-gray-200'>
-                <span className='text-lg font-bold text-gray-900'>Total</span>
-                <span className='text-2xl font-bold text-orange-600'>
-                    <Protect plan={'plus'} fallback={`${currency}${(() => { const discount = coupon ? (coupon.discountType === 'percentage' ? (coupon.discount / 100 * totalPrice) : Math.min(coupon.discount, totalPrice)) : 0; const total = totalPrice + shippingFee - discount; return coupon ? total.toFixed(2) : total.toLocaleString(); })()}`}>
-                    {currency}{(() => { const discount = coupon ? (coupon.discountType === 'percentage' ? (coupon.discount / 100 * totalPrice) : Math.min(coupon.discount, totalPrice)) : 0; const total = totalPrice - discount; return coupon ? total.toFixed(2) : total.toLocaleString(); })()}
-                    </Protect>
-                </span>
+                <div className='flex justify-between text-sm font-semibold mt-4'>
+                    <span className='text-gray-700'>Total</span>
+                    <span className='text-gray-900'>
+                        {currency} {
+                            (
+                                Number(totalPrice) + Number(shippingFee)
+                                - (coupon ? (coupon.discountType === 'percentage' ? (coupon.discount / 100 * totalPrice) : Math.min(coupon.discount, totalPrice)) : 0)
+                            ).toFixed(2)
+                        }
+                    </span>
+                </div>
             </div>
             
             <button 
-                onClick={e => toast.promise(handlePlaceOrder(e), { loading: 'Placing Order...' })} 
-                disabled={!isSignedIn && !isGuestCheckout}
+                onClick={e => toast.promise(handlePlaceOrder(e), { loading: 'Placing Order...' })}
+                disabled={loading || (!isSignedIn && !isGuestCheckout)}
                 className={`w-full py-3.5 rounded-lg font-bold text-base transition-colors shadow-md hover:shadow-lg uppercase ${
-                    !isSignedIn && !isGuestCheckout 
+                    loading ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : (!isSignedIn && !isGuestCheckout 
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                        : 'bg-orange-500 text-white hover:bg-orange-600'
+                        : 'bg-orange-500 text-white hover:bg-orange-600')
                 }`}
             >
-                {!isSignedIn && !isGuestCheckout ? 'Sign In or Use Guest Checkout' : 'Proceed to Checkout'}
+                {loading ? 'Placing Order...' : (!isSignedIn && !isGuestCheckout ? 'Sign In or Use Guest Checkout' : 'Proceed to Checkout')}
             </button>
 
             {showAddressModal && <AddressModal setShowAddressModal={setShowAddressModal} />}

@@ -1,4 +1,6 @@
+
 'use client'
+import React from 'react'
 
 import { Home, Search, ShoppingCart, User, LayoutGrid } from 'lucide-react'
 import Link from 'next/link'
@@ -7,6 +9,8 @@ import { useSelector } from 'react-redux'
 import { useAuth } from '@clerk/nextjs'
 
 export default function MobileBottomNav() {
+  const [hydrated, setHydrated] = React.useState(false)
+  React.useEffect(() => { setHydrated(true) }, [])
   const pathname = usePathname()
   const cartCount = useSelector((state) => state.cart.total)
   const { isSignedIn } = useAuth()
@@ -29,7 +33,6 @@ export default function MobileBottomNav() {
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
-          
           return (
             <Link
               key={item.href}
@@ -42,7 +45,7 @@ export default function MobileBottomNav() {
             >
               <div className="relative mb-1">
                 <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-                {item.badge > 0 && (
+                {hydrated && item.badge > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>

@@ -1,4 +1,5 @@
-'use client'
+
+'use client';
 
 import { PackageIcon, Search, ShoppingCart, LifeBuoy, Menu, X, HeartIcon } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +14,8 @@ import Logo from "../assets/logo/Qui Logo G (1).png";
 import Truck from '../assets/delivery.png';
 
 const Navbar = () => {
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => { setIsClient(true); }, []);
   const { user } = useUser();
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
@@ -183,7 +186,7 @@ const Navbar = () => {
             {/* Cart */}
             <button onClick={handleCartClick} className="relative p-2 hover:bg-gray-100 rounded-full transition group">
   <ShoppingCart size={22} className="text-gray-600 group-hover:text-blue-600 transition" />
-  {cartCount > 0 && (
+  {isClient && cartCount > 0 && (
     <span className="absolute -top-1 -right-1 text-[10px] font-bold text-white bg-blue-600 rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
       {cartCount}
     </span>
@@ -197,8 +200,8 @@ const Navbar = () => {
           <div className="lg:hidden flex items-center gap-3">
           <button onClick={handleCartClick} className="relative p-2">
   <ShoppingCart size={20} className="text-gray-600" />
-  {cartCount > 0 && (
-    <span className="absolute -top-1 -right-1 text-[10px] font-bold text-white bg-blue-600 rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
+  {isClient && cartCount > 0 && (
+    <span className="absolute -top-1 -right-1 text-[10px] font-bold text-white bg-blue-600 rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
       {cartCount}
     </span>
   )}

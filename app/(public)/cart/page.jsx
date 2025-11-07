@@ -13,19 +13,24 @@ import axios from "axios";
 
 
 export default function Cart() {
+    const [cartLoading, setCartLoading] = useState(true);
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'AED';
     const { getToken, isSignedIn } = useAuth();
-    
     const { cartItems } = useSelector(state => state.cart);
     const products = useSelector(state => state.product.list);
-
     const dispatch = useDispatch();
-
     const [cartArray, setCartArray] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
     const [recentOrders, setRecentOrders] = useState([]);
     const [loadingOrders, setLoadingOrders] = useState(true);
+
+    // Ensure products are loaded before building cart
+    useEffect(() => {
+        if (!products || products.length === 0) {
+            dispatch({ type: 'product/fetchProducts' });
+        }
+    }, [products, dispatch]);
 
     const createCartArray = () => {
         setTotalPrice(0);
@@ -85,6 +90,7 @@ export default function Cart() {
     useEffect(() => {
         if (products.length > 0) {
             createCartArray();
+            setCartLoading(false);
         }
     }, [cartItems, products]);
 
@@ -93,7 +99,12 @@ export default function Cart() {
     }, [isSignedIn]);
 
     return (
-        <div className="bg-gray-50">
+        cartLoading ? (
+            <div className="flex items-center justify-center h-96">
+                <span className="text-lg text-gray-500">Loading cart...</span>
+            </div>
+        ) : (
+            <div className="bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-[60vh]">
                 {/* Cart Section */}
                 {cartArray.length > 0 ? (
@@ -216,5 +227,6 @@ export default function Cart() {
                 )}
             </div>
         </div>
-    )
+        )
+    );
 }

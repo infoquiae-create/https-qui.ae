@@ -42,7 +42,10 @@ const ProductCard = ({ product }) => {
     product.mrp && product.mrp > product.price
       ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
       : 0
-  const ratingValue = Number(product.rating || 0)
+  // Support both array and number for rating
+  // Use backend response fields
+  const ratingValue = Math.round(product.averageRating || 0);
+  const reviewCount = product.ratingCount || 0;
 
   // Split price into integer and decimal
   const [intPrice, decPrice] = (product.price?.toFixed(2) || '0.00').split('.')
@@ -67,6 +70,11 @@ const ProductCard = ({ product }) => {
     >
       {/* Image Container */}
       <div className="relative w-full h-56 overflow-hidden bg-gray-50" style={{ borderRadius: '10px 10px 0 0' }}>
+        {product.fastDelivery && (
+          <span className="absolute top-2 left-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md z-10">
+            Fast Delivery
+          </span>
+        )}
         <Image
           src={primaryImage}
           alt={productName}
@@ -111,14 +119,20 @@ const ProductCard = ({ product }) => {
             {productName}
           </h3>
           <div className="flex items-center mt-1">
-            {[...Array(5)].map((_, i) => (
-              <FaStar
-                key={i}
-                size={12}
-                className={i < ratingValue ? 'text-yellow-400' : 'text-gray-300'}
-              />
-            ))}
-            <span className="text-gray-500 text-xs ml-1">({product.ratingCount || 0})</span>
+            {reviewCount > 0 ? (
+              <>
+                {[...Array(5)].map((_, i) => (
+                  <FaStar
+                    key={i}
+                    size={12}
+                    className={i < ratingValue ? 'text-yellow-400' : 'text-gray-300'}
+                  />
+                ))}
+                <span className="text-gray-500 text-xs ml-1">({reviewCount})</span>
+              </>
+            ) : (
+              <span className="text-xs text-gray-400 ml-1">No reviews</span>
+            )}
           </div>
         </div>
 
@@ -166,17 +180,16 @@ const BestSelling = () => {
   const products = useSelector((state) => state.product.list || [])
   const [curated, setCurated] = useState([])
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const { data } = await axios.get('/api/home-selection?section=limited_offers')
-        if (Array.isArray(data.products)) setCurated(data.products)
-      } catch (e) {
-        // silent fallback
-      }
-    }
-    load()
-  }, [])
+  // useEffect(() => {
+  //   const load = async () => {
+  //     try {
+  //       const { data } = await axios.get('/api/home-selection?section=limited_offers')
+  //       if (Array.isArray(data.products)) setCurated(data.products)
+  //     } catch (e) {
+  //     }
+  //   }
+  //   load()
+  // }, [])
 
   const baseSorted = products
     .slice()
@@ -186,17 +199,14 @@ const BestSelling = () => {
   const shown = (curated.length ? curated : baseSorted).slice(0, displayQuantity)
 
   return (
-    <div className="px-4 my-16 max-w-7xl mx-auto">
+  <div className="px-4 my-16 max-w-7xl mx-auto">
     <Title
   title="Winter Sale"
   description="Grab the best deals before they're gone!"
-  href="/shop"
   visibleButton={false}
 />
 
-
-      {/* Product Grid */}
-      <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5 gap-6">
+  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5 gap-3 md:gap-6">
         {shown.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

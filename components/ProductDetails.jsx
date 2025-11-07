@@ -383,21 +383,27 @@ const ProductDetails = ({ product }) => {
 
             {/* Rating & Reviews */}
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <StarIcon
-                    key={i}
-                    size={16}
-                    fill={i < Math.round(averageRating) ? "#FFA500" : "none"}
-                    className={i < Math.round(averageRating) ? "text-orange-500" : "text-gray-300"}
-                    strokeWidth={1.5}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-gray-600">{product.rating?.length || 0} Reviews</span>
-              <a href="#reviews" className="text-sm text-blue-600 hover:underline">
-                (See Reviews)
-              </a>
+              {product.ratingCount > 0 ? (
+                <>
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <StarIcon
+                        key={i}
+                        size={16}
+                        fill={i < Math.round(product.averageRating) ? "#FFA500" : "none"}
+                        className={i < Math.round(product.averageRating) ? "text-orange-500" : "text-gray-300"}
+                        strokeWidth={1.5}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-600">{product.ratingCount} Reviews</span>
+                  <a href="#reviews" className="text-sm text-blue-600 hover:underline">
+                    (See Reviews)
+                  </a>
+                </>
+              ) : (
+                <span className="text-xs text-gray-400 ml-1">No reviews</span>
+              )}
             </div>
 
             {/* Price Section */}
@@ -545,7 +551,7 @@ const ProductDetails = ({ product }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2 pt-3">
+            <div className="hidden md:flex gap-2 pt-3">
               <button 
                 onClick={handleOrderNow}
                 className="flex-1 bg-red-500 text-white py-3.5 px-6 rounded-lg font-semibold text-base hover:bg-red-600 transition flex items-center justify-center gap-2"

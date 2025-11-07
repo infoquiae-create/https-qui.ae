@@ -28,7 +28,7 @@ const BannerSlider = () => {
   const handleClick = (link) => link && router.push(link);
 
   return (
-    <div className="relative w-full overflow-hidden max-w-[1300px] mx-auto flex justify-center bg-transparent rounded-[25px]">
+  <div className="relative w-full overflow-hidden max-w-[1300px] mx-auto flex justify-center bg-transparent rounded-none sm:rounded-[25px] m-0 p-0">
       {/* Slider wrapper */}
       <div
         className="flex transition-transform duration-700 ease-out"
@@ -41,14 +41,14 @@ const BannerSlider = () => {
           <div
             key={i}
             // onClick={() => handleClick(banner.link)}
-            className="relative cursor-pointer flex-[0_0_100%] overflow-hidden aspect-[16/6] sm:aspect-[16/5] md:aspect-[16/4] lg:aspect-[16/3]"
+            className="relative cursor-pointer flex-[0_0_100%] overflow-hidden aspect-[4/1] sm:aspect-[16/5] md:aspect-[16/4] lg:aspect-[16/3]"
           >
             <Image
               src={banner.image}
               alt={`Banner ${i + 1}`}
               fill
               sizes="100vw"
-              className="object-cover object-center transition-transform duration-700 hover:scale-105"
+              className="object-contain sm:object-cover object-center transition-transform duration-700 hover:scale-105"
               priority
             />
           </div>

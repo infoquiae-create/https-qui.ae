@@ -62,9 +62,9 @@ const Footer = () => {
         <footer className="bg-black text-slate-200 border-t border-slate-800">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Main Footer Content */}
-                <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-6">
+                <div className="py-2 grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-6 md:gap-4 lg:gap-6">
                     {/* Brand Section - Takes 2 columns on large screens */}
-                    <div className="lg:col-span-2">
+                    <div className="col-span-2 lg:col-span-2">
                         <Link href="/" className="inline-block mb-4">
                             <Image
                                 src={Logo}
@@ -129,17 +129,25 @@ const Footer = () => {
                     ))}
                 </div>
 
-                {/* Bottom Bar */}
-                <div className="border-t border-slate-800 py-6">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-sm text-slate-500">
+                {/* Bottom Bar - Normal flow, always at bottom of footer */}
+                <div className="border-t border-slate-800 py-8 mt-4 w-full flex flex-col items-center justify-end">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 w-full max-w-7xl px-4">
+                        <div className="flex items-center gap-3 mb-2 sm:mb-0">
+                            {socialIcons.map((item, i) => (
+                                <Link 
+                                    href={item.link} 
+                                    key={i} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="flex items-center justify-center w-8 h-8 bg-white/5 hover:bg-white/10 border border-slate-800 hover:border-slate-700 transition rounded-lg"
+                                >
+                                    <item.icon />
+                                </Link>
+                            ))}
+                        </div>
+                        <p className="text-sm text-slate-500 text-center w-full">
                             © {new Date().getFullYear()} Qui.ae. All rights reserved.
                         </p>
-                        <div className="flex items-center gap-6 text-sm">
-                            <Link href="/terms" className="text-slate-500 hover:text-white transition">Terms</Link>
-                            <Link href="/privacy-policy" className="text-slate-500 hover:text-white transition">Privacy</Link>
-                            <Link href="/cookie-policy" className="text-slate-500 hover:text-white transition">Cookies</Link>
-                        </div>
                     </div>
                 </div>
             </div>

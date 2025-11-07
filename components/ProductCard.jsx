@@ -35,10 +35,14 @@ const ProductCard = ({ product }) => {
 
     return (
         <Link href={`/product/${product.id}`} className='group w-full relative'>
-            <div className='bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col relative h-full'>
-                
+            <div className='bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col relative h-full min-h-[160px] md:min-h-[200px]'>
                 {/* Product Image */}
-                <div className='relative w-full h-60 bg-gray-50 overflow-hidden'>
+                <div className='relative w-full aspect-square bg-gray-50 overflow-hidden'>
+                    {product.fastDelivery && (
+                        <span className='absolute top-2 left-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md z-10'>
+                            Fast Delivery
+                        </span>
+                    )}
                     <Image
                         src={product.images[0]}
                         alt={product.name}
@@ -46,7 +50,7 @@ const ProductCard = ({ product }) => {
                         className='object-cover transition-transform duration-500 group-hover:scale-105'
                     />
                     {product.isNew && (
-                        <span className='absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10'>
+                        <span className='absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md z-10'>
                             NEW
                         </span>
                     )}
@@ -58,39 +62,42 @@ const ProductCard = ({ product }) => {
                 </div>
 
                 {/* Product Details */}
-                <div className='p-4 flex flex-col gap-2 text-left'>
-                    <p className='font-bold text-gray-900 text-lg truncate'>{product.name}</p>
-                    
+                <div className='p-2 md:p-4 flex flex-col gap-1 md:gap-2 text-left'>
+                    <p className='font-bold text-gray-900 text-base md:text-lg truncate'>{product.name}</p>
                     {/* Ratings - No Border */}
                     <div className='flex items-center gap-1 mt-1'>
-                        {Array(5).fill('').map((_, index) => (
-                            <StarIcon
-                                key={index}
-                                size={14}
-                                className='text-yellow-500'
-                                fill={rating >= index + 1 ? "#EAB308" : "none"}
-                                stroke={rating >= index + 1 ? "#EAB308" : "#D1D5DB"}
-                                strokeWidth={1.5}
-                            />
-                        ))}
-                        <span className='text-xs text-gray-500 ml-1'>({product.rating?.length || 0})</span>
+                        {product.ratingCount > 0 ? (
+                            <>
+                                {Array(5).fill('').map((_, index) => (
+                                    <StarIcon
+                                        key={index}
+                                        size={13}
+                                        className='text-yellow-500'
+                                        fill={product.averageRating >= index + 1 ? "#EAB308" : "none"}
+                                        stroke={product.averageRating >= index + 1 ? "#EAB308" : "#D1D5DB"}
+                                        strokeWidth={1.5}
+                                    />
+                                ))}
+                                <span className='text-xs text-gray-500 ml-1'>({product.ratingCount})</span>
+                            </>
+                        ) : (
+                            <span className='text-xs text-gray-400 ml-1'>No reviews</span>
+                        )}
                     </div>
-
                     {/* Price */}
                     <div className='flex items-center gap-2 mt-1'>
-                        <p className='text-xl font-extrabold text-gray-900'>{currency}{product.price}</p>
+                        <p className='text-base md:text-xl font-extrabold text-gray-900'>{currency}{product.price}</p>
                         {product.mrp && product.mrp > product.price && (
-                            <p className='text-sm text-gray-500 line-through'>{currency}{product.mrp}</p>
+                            <p className='text-xs md:text-sm text-gray-500 line-through'>{currency}{product.mrp}</p>
                         )}
                     </div>
                 </div>
-
                 {/* Cart Button with Badge - Bottom Right */}
                 <button 
                     onClick={handleAddToCart}
-                    className='absolute bottom-4 right-4 w-10 h-10 bg-slate-700 hover:bg-slate-900 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 cursor-pointer z-10'
+                    className='absolute bottom-2 right-2 md:bottom-4 md:right-4 w-9 h-9 md:w-10 md:h-10 bg-slate-700 hover:bg-slate-900 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 cursor-pointer z-10'
                 >
-                    <ShoppingCartIcon className='text-white' size={18} />
+                    <ShoppingCartIcon className='text-white' size={16} />
                     {itemQuantity > 0 && (
                         <span className='absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md'>
                             {itemQuantity}
