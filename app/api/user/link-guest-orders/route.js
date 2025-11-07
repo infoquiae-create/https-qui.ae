@@ -20,12 +20,13 @@ export async function POST(request) {
         }
 
         // Find guest user by email or phone
+        const guestUserFilter = [];
+        if (email) guestUserFilter.push({ email: email });
+        if (phone) guestUserFilter.push({ phone: phone });
+
         const guestUser = await prisma.guestUser.findFirst({
             where: {
-                OR: [
-                    email ? { email: email } : {},
-                    phone ? { phone: phone } : {}
-                ],
+                OR: guestUserFilter,
                 accountCreated: false
             }
         });
@@ -38,13 +39,14 @@ export async function POST(request) {
         }
 
         // Find all guest orders with matching email or phone
+        const orderFilter = [];
+        if (email) orderFilter.push({ guestEmail: email });
+        if (phone) orderFilter.push({ guestPhone: phone });
+
         const guestOrders = await prisma.order.findMany({
             where: {
                 isGuest: true,
-                OR: [
-                    email ? { guestEmail: email } : {},
-                    phone ? { guestPhone: phone } : {}
-                ]
+                OR: orderFilter
             }
         });
 
