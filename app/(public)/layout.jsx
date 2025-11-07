@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import NavbarGuest from "@/components/NavbarGuest";
 import Footer from "@/components/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import GuestOrderLinker from "@/components/GuestOrderLinker";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "@/lib/features/product/productSlice";
@@ -32,6 +33,7 @@ function PublicLayoutAuthed({ children }) {
 
     return (
         <div className="flex flex-col min-h-screen">
+            <GuestOrderLinker />
             <Banner />
             <Navbar />
             <main className="flex-1 pb-20 lg:pb-0">{children}</main>

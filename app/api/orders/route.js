@@ -178,6 +178,7 @@ export async function POST(request){
                         id: 'guest',
                         name: 'Guest User',
                         email: 'guest@system.local',
+                        image: '',
                         cart: []
                     }
                 });
